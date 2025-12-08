@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editTaskDescription = document.getElementById('edit-task-description');
     const editTaskDate = document.getElementById('edit-task-date');
 
-    const API_URL = 'http://localhost:3000/api/tasks';
+    const API_URL = '/api/tasks';
     const authHeaders = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
