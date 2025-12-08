@@ -13,15 +13,23 @@ const JWT_SECRET = "sizin_super_gizli_acariniz_12345";
 app.use(cors());
 app.use(express.json());
 
-// --- DÜZƏLİŞ: Statik faylları (CSS, JS) olduğu yerdən götür ---
-app.use(express.static(path.join(__dirname)));
+// --- DÜZƏLİŞ: Vercel-də faylları tapmaq üçün ən etibarlı yol ---
+// Biz serverə deyirik: "Statik faylları (CSS, JS) olduğun yerdən götür"
+app.use(express.static(process.cwd())); 
+app.use(express.static(path.join(process.cwd(), 'public'))); // Ehtiyat üçün public-ə də baxır
 
-// Ana səhifəni yüklə
+// Ana səhifəni məcburi olaraq index.html-ə yönləndiririk
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  // Əvvəl public qovluğunu yoxlayır, tapmasa ana qovluğa baxır
+  const publicPath = path.join(process.cwd(), 'public', 'index.html');
+  const rootPath = path.join(process.cwd(), 'index.html');
+  
+  res.sendFile(rootPath, (err) => {
+     if (err) res.sendFile(publicPath);
+  });
 });
 
-// 2. Database Cədvəlləri
+// 2. Database Cədvəlləri (Xəta olsa server dayanmasın deyə try-catch gücləndirildi)
 async function initDB() {
   try {
     await sql`
@@ -46,13 +54,14 @@ async function initDB() {
     `;
     console.log("Postgres cədvəlləri hazırdır.");
   } catch (err) {
-    console.error("Cədvəl yaratma xətası:", err);
+    console.error("Database Başlanğıc Xətası (Narahat olma, server işləyir):", err.message);
   }
 }
 
+// Server açılan kimi bazanı yoxla
 initDB();
 
-// === API Endpoints (Login, Register, Tasks) ===
+// === API Endpoints ===
 
 app.post("/api/users/register", async (req, res) => {
   const { username, password } = req.body;
@@ -65,7 +74,8 @@ app.post("/api/users/register", async (req, res) => {
     `;
     res.status(201).json({ message: "Uğurlu", userId: result.rows[0].id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Register Error:", err);
+    res.status(500).json({ error: "Server xətası." });
   }
 });
 
@@ -80,11 +90,11 @@ app.post("/api/users/login", async (req, res) => {
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ message: "Giriş uğurlu", token, role: user.role });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Login Error:", err);
+    res.status(500).json({ error: "Server xətası." });
   }
 });
 
-// Token Yoxlama
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -101,7 +111,10 @@ app.get("/api/tasks", authenticateToken, async (req, res) => {
   try {
     const result = await sql`SELECT * FROM tasks WHERE user_id = ${req.user.id} ORDER BY id DESC`;
     res.json({ tasks: result.rows });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { 
+    console.error("Get Tasks Error:", err);
+    res.status(500).json({ error: "Server xətası" }); 
+  }
 });
 
 app.post("/api/tasks", authenticateToken, async (req, res) => {
@@ -157,6 +170,13 @@ app.delete("/api/admin/users/:id", [authenticateToken, authenticateAdmin], async
 app.put("/api/admin/users/:id/role", [authenticateToken, authenticateAdmin], async (req, res) => {
   await sql`UPDATE users SET role=${req.body.newRole} WHERE id=${req.params.id}`;
   res.json({ message: "Rol dəyişdirildi" });
+});
+
+app.put("/api/admin/users/:id/reset-password", [authenticateToken, authenticateAdmin], async (req, res) => {
+  const { newPassword } = req.body;
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await sql`UPDATE users SET password_hash=${hashedPassword} WHERE id=${req.params.id}`;
+  res.json({ message: "Parol resetləndi" });
 });
 
 app.listen(port, () => {
