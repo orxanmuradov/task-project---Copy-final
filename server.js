@@ -272,10 +272,11 @@
 
 
 const express = require("express");
-const { sql } = require("@vercel/postgres"); // SQLite yerinə bu gəldi
+const { sql } = require("@vercel/postgres");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const path = require("path"); // <--- YENİ: Fayl yollarını tapmaq üçün lazım
 
 const app = express();
 const port = 3000;
@@ -285,10 +286,17 @@ const JWT_SECRET = "sizin_super_gizli_acariniz_12345";
 app.use(cors());
 app.use(express.json());
 
-// 2. Database Cədvəllərinin Yaradılması (Avtomatik yoxlayır)
+// --- YENİ HİSSƏ: Frontend fayllarını (HTML, CSS, JS) serverdən oxutmaq ---
+app.use(express.static(__dirname)); 
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+// ------------------------------------------------------------------------
+
+// 2. Database Cədvəllərinin Yaradılması
 async function initDB() {
   try {
-    // Users cədvəli (Postgres üçün SERIAL istifadə edirik)
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -298,7 +306,6 @@ async function initDB() {
       );
     `;
 
-    // Tasks cədvəli
     await sql`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
@@ -316,10 +323,9 @@ async function initDB() {
   }
 }
 
-// Server işə düşəndə cədvəlləri yoxla
 initDB();
 
-// === 4. İstifadəçi Qeydiyyatı (Register) ===
+// === 4. İstifadəçi Qeydiyyatı ===
 app.post("/api/users/register", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -327,14 +333,12 @@ app.post("/api/users/register", async (req, res) => {
   }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Postgres-də ID-ni geri almaq üçün 'RETURNING id' yazırıq
     const result = await sql`
       INSERT INTO users (username, password_hash) VALUES (${username}, ${hashedPassword})
       RETURNING id
     `;
     res.status(201).json({ message: "İstifadəçi uğurla yaradıldı.", userId: result.rows[0].id });
   } catch (err) {
-    // Postgres-də 'unique violation' kodu 23505-dir
     if (err.code === '23505') {
       return res.status(400).json({ error: "Bu istifadəçi adı artıq mövcuddur." });
     }
@@ -342,12 +346,12 @@ app.post("/api/users/register", async (req, res) => {
   }
 });
 
-// === 5. İstifadəçi Girişi (Login) ===
+// === 5. İstifadəçi Girişi ===
 app.post("/api/users/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const result = await sql`SELECT * FROM users WHERE username = ${username}`;
-    const user = result.rows[0]; // Postgres nəticəni 'rows' massivində qaytarır
+    const user = result.rows[0];
 
     if (!user) {
       return res.status(400).json({ error: "İstifadəçi adı və ya parol səhvdir." });
@@ -370,7 +374,7 @@ app.post("/api/users/login", async (req, res) => {
   }
 });
 
-// === 6. Token Yoxlama Middleware ===
+// === 6. Middleware ===
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -383,7 +387,6 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// === 7. Admin Yoxlama Middleware ===
 function authenticateAdmin(req, res, next) {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: "İcazəniz yoxdur (Admin deyilsiniz)." });
@@ -391,9 +394,7 @@ function authenticateAdmin(req, res, next) {
   next();
 }
 
-// === 8. API Endpoints (NORMAL USER) ===
-
-// Bütün tapşırıqları göstər
+// === 8. API Endpoints ===
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   try {
@@ -404,7 +405,6 @@ app.get("/api/tasks", authenticateToken, async (req, res) => {
   }
 });
 
-// Tək tapşırığı göstər
 app.get("/api/tasks/:id", authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user.id;
@@ -417,7 +417,6 @@ app.get("/api/tasks/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// Yeni tapşırıq yarat
 app.post("/api/tasks", authenticateToken, async (req, res) => {
   const { title, category, description, due_date } = req.body; 
   const userId = req.user.id;
@@ -436,7 +435,6 @@ app.post("/api/tasks", authenticateToken, async (req, res) => {
   }
 });
 
-// Tapşırıq detallarını yenilə
 app.put("/api/tasks/:id", authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user.id;
@@ -456,7 +454,6 @@ app.put("/api/tasks/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// Status yenilə
 app.put("/api/tasks/:id/status", authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user.id;
@@ -472,7 +469,6 @@ app.put("/api/tasks/:id/status", authenticateToken, async (req, res) => {
   }
 });
 
-// Tapşırığı sil
 app.delete("/api/tasks/:id", authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user.id;
@@ -485,8 +481,7 @@ app.delete("/api/tasks/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// === 9. ADMIN API Endpoints ===
-
+// === 9. Admin Endpoints ===
 app.get("/api/admin/users", [authenticateToken, authenticateAdmin], async (req, res) => {
   try {
     const result = await sql`SELECT id, username, role FROM users`;
@@ -550,7 +545,6 @@ app.put("/api/admin/users/:id/role", [authenticateToken, authenticateAdmin], asy
   }
 });
 
-// === 10. Serveri Başla ===
 app.listen(port, () => {
   console.log(`Backend server http://localhost:${port} ünvanında işləyir...`);
 });
