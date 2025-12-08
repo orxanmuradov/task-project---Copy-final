@@ -1,0 +1,98 @@
+/* === YENİ: "TÜND REJİM" (QARA/BOZ/SARI) - Giriş Səhifəsi === */
+body {
+    font-family: Arial, sans-serif;
+    /* YENİ: Qara və tünd-boz (Gri) gradient */
+    background: linear-gradient(135deg, #263238 0%, #1a1a1e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.auth-container {
+    /* YENİ: Tünd fon (Gri) */
+    background: #2e3b43;
+    padding: 30px;
+    border-radius: 12px;
+    /* YENİ: Tünd rejimə uyğun kölgə və sərhəd */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid #455a64;
+    width: 300px;
+    text-align: center;
+}
+
+h2 {
+    color: #ffffff; /* Açıq başlıq */
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #b0bec5; /* Açıq boz */
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    /* YENİ: Tünd inputlar */
+    border: 2px solid #455a64;
+    background: #202a30;
+    color: #eceff1; /* Açıq mətn */
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+/* YENİ: Fokus olanda SARI parıltı */
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #FBC02D;
+    box-shadow: 0 0 10px rgba(251, 192, 45, 0.5);
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    /* YENİ: Cəlbedici SARI düymə */
+    background: linear-gradient(45deg, #FBC02D, #FFAB00);
+    color: #1a1a1e; /* Tünd yazı */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(251, 192, 45, 0.3);
+}
+
+button:hover {
+    box-shadow: 0 6px 15px rgba(251, 192, 45, 0.5);
+    transform: translateY(-2px);
+}
+
+.error {
+    color: #ff4b2b; /* Qırmızı xəta rəngi */
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.switch-form {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #b0bec5; /* Açıq boz */
+}
+
+.switch-form a {
+    color: #FBC02D; /* SARI link */
+    text-decoration: none;
+}
+.switch-form a:hover {
+    text-decoration: underline;
+}

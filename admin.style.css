@@ -1,0 +1,200 @@
+ /* === "TÜND REJİM" (QARA/BOZ/SARI) - Admin Paneli === */
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #263238 0%, #1a1a1e 100%);
+    color: #eceff1;
+    min-height: 100vh;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: #2e3b43;
+    border-bottom: 2px solid #FBC02D; /* Sarı vurğu */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.admin-header h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #ffffff;
+}
+.admin-header h1 .fas {
+    margin-right: 10px;
+    color: #FBC02D;
+}
+
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-btn {
+    background: #455a64;
+    color: #eceff1;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+.nav-btn:hover {
+    background: #546e7a;
+    transform: translateY(-2px);
+}
+.nav-btn.logout {
+    background: #dc3545;
+    color: white;
+}
+.nav-btn.logout:hover {
+    background: #c82333;
+}
+
+.admin-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.admin-section {
+    background-color: #2e3b43;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #455a64;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    margin-bottom: 30px;
+}
+
+.admin-section h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #455a64;
+    padding-bottom: 10px;
+    color: #FBC02D; /* Sarı başlıq */
+}
+.admin-section h2 .fas {
+    margin-right: 10px;
+}
+
+.table-container {
+    overflow-x: auto; /* Balaca ekranlarda scroll etmək üçün */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #455a64;
+}
+
+table th {
+    background-color: #34434c;
+    color: #eceff1;
+    font-weight: 600;
+}
+
+table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+table tbody tr:hover {
+    background-color: #34434c;
+}
+
+/* Əməliyyat Düymələri */
+table td:last-child {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+.action-btn:hover {
+    transform: scale(1.05);
+}
+
+.btn-reset {
+    background-color: #FBC02D; /* Sarı */
+    color: #1a1a1e;
+}
+.btn-reset:hover {
+    background-color: #FFAB00;
+}
+
+.btn-delete {
+    background-color: #dc3545; /* Qırmızı */
+    color: white;
+}
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+/* Rol Dəyişmə Düyməsi Stili */
+.btn-role {
+    background-color: #007bff; /* Mavi */
+    color: white;
+}
+.btn-role:hover {
+    background-color: #0056b3;
+}
+
+
+
+
+/* === EXCEL EXPORT STİLLƏRİ === */
+
+/* Başlıq və düyməni yanaşı qoymaq üçün */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #455a64;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.section-header h2 {
+    border-bottom: none; /* Köhnə borderi ləğv edirik */
+    margin: 0;
+    padding: 0;
+}
+
+/* Excel Düyməsi (Yaşıl) */
+.btn-excel {
+    background: linear-gradient(45deg, #1D6F42, #218838);
+    color: white;
+    padding: 10px 15px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(33, 136, 56, 0.3);
+}
+
+.btn-excel:hover {
+    background: #145532;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(33, 136, 56, 0.5);
+}

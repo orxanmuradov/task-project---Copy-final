@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mənim Tapşırıq Siyahım</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    
+    <div class="container">
+        
+        <header class="app-header">
+            <h1 class="main-title"><i class="fas fa-tasks"></i> Tapşırıqlarım</h1>
+            <div class="user-info">
+                <span id="welcome-message">Xoş gəldin...</span>
+                <button id="logout-btn" title="Çıxış et"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+
+        <form id="task-form">
+            <input type="text" id="task-input" placeholder="Yeni tapşırıq daxil edin..." required>
+            
+            <select id="task-category" title="Kateqoriya seçin">
+                <option value="general">Ümumi</option>
+                <option value="work">İş</option>
+                <option value="home">Ev</option>
+                <option value="shopping">Alış-veriş</option>
+            </select>
+            
+            <button type="submit" title="Əlavə et"><i class="fas fa-plus"></i></button>
+        </form>
+
+        <ul id="task-list">
+            </ul>
+    </div>
+
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Tapşırıq Detalları</h2>
+            <form id="edit-form">
+                <input type="hidden" id="edit-task-id">
+                <label for="edit-task-title">Başlıq:</label>
+                <input type="text" id="edit-task-title" required>
+                <label for="edit-task-description">Qeyd (Təsvir):</label>
+                <textarea id="edit-task-description" rows="4"></textarea>
+                <label for="edit-task-date">Son Tarix:</label>
+                <input type="date" id="edit-task-date">
+                <div class="modal-actions">
+                    <button type="submit" id="save-task-btn">Yadda Saxla</button>
+                    <button type="button" id="cancel-edit-btn">Ləğv Et</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

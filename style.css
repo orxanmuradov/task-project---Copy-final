@@ -1,0 +1,235 @@
+/* === "TÜND REJİM" (QARA/BOZ/SARI) === */
+
+/* === Əsas Stillər (Tünd Fon) === */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #263238 0%, #1a1a1e 100%);
+    color: #eceff1;
+    min-height: 100vh;
+    margin: 0;
+    padding: 30px 15px;
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #2e3b43;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid #455a64;
+}
+
+/* === Başlıq və Çıxış === */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #455a64;
+    padding-bottom: 15px;
+}
+.main-title {
+    margin: 0;
+    font-size: 26px;
+    color: #ffffff;
+    font-weight: 600;
+}
+.main-title .fas {
+    margin-right: 12px;
+    background: linear-gradient(45deg, #FBC02D, #FFAB00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.user-info { display: flex; align-items: center; gap: 15px; }
+#welcome-message {
+    font-size: 14px;
+    color: #b0bec5;
+    font-weight: bold;
+    display: none;
+}
+@media (min-width: 500px) { #welcome-message { display: block; } }
+#logout-btn {
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(255, 65, 108, 0.3);
+}
+#logout-btn:hover {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 6px 15px rgba(255, 65, 108, 0.5);
+}
+
+/* === Tünd Rejimə Uyğun Yazı Sahəsi === */
+#task-form { display: flex; margin-bottom: 25px; gap: 10px; }
+#task-input, #task-category {
+    background: #202a30;
+    border: 2px solid #455a64;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #eceff1;
+    transition: all 0.3s ease;
+}
+#task-input { flex-grow: 1; }
+#task-category { flex-basis: 150px; }
+
+#task-input:focus, #task-category:focus {
+    background: #2e3b43;
+    border-color: #FBC02D;
+    box-shadow: 0 0 10px rgba(251, 192, 45, 0.5);
+    outline: none;
+}
+
+#task-form button {
+    padding: 0 12px;
+    width: 46px; height: 46px;
+    font-size: 20px;
+    background: linear-gradient(45deg, #FBC02D, #FFAB00);
+    box-shadow: 0 4px 10px rgba(251, 192, 45, 0.3);
+    color: #1a1a1e;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+#task-form button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(251, 192, 45, 0.5);
+}
+
+/* === Tapşırıq Siyahısı (Tünd Rejim) === */
+#task-list { list-style-type: none; padding: 0; }
+#task-list li {
+    background: #34434c;
+    border: 1px solid #455a64;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    gap: 15px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* YENİ DƏYİŞİKLİK BURADADIR (1/2) */
+/* Tapşırığın üzərinə gələndəki göy rəng sarı ilə əvəz edildi */
+#task-list li:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border-left: 4px solid #FBC02D; /* SARI RƏNG */
+    padding-left: 11px;
+}
+
+/* YENİ DƏYİŞİKLİK BURADADIR (2/2) */
+/* Bütün ikonların fonu sarı rəngə keçdi */
+.task-category-icon {
+    font-size: 18px; width: 36px; height: 36px;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center;
+    flex-shrink: 0; transition: all 0.3s ease;
+    /* İkonun rəngi tünd oldu (sarı fonda görünsün deyə) */
+    color: #1a1a1e; 
+}
+#task-list li:hover .task-category-icon { transform: rotate(10deg); }
+
+/* Bütün kateqoriyalar üçün vahid sarı fon */
+.icon-bg-general,
+.icon-bg-work,
+.icon-bg-home,
+.icon-bg-shopping {
+    background-color: #FBC02D;
+}
+
+
+.task-title { flex-grow: 1; cursor: pointer; color: #eceff1; }
+.task-title:hover { color: #FBC02D; }
+#task-list li.completed .task-title {
+    text-decoration: line-through solid #78909c 2px;
+    color: #78909c;
+    cursor: default;
+}
+#task-list li.completed .task-title:hover { color: #78909c; }
+.task-meta-icons {
+    flex-shrink: 0; font-size: 14px; color: #78909c;
+}
+.task-meta-icons i { margin-left: 5px; }
+#task-list li .actions { display: flex; flex-shrink: 0; gap: 15px; }
+#task-list li .actions button {
+    background: none; border: none; cursor: pointer;
+    font-size: 20px; color: #78909c;
+    transition: all 0.2s ease;
+}
+.delete-btn:hover { color: #dc3545; transform: scale(1.2); }
+.status-btn.pending:hover { color: #FBC02D; transform: scale(1.2); }
+.status-btn { color: #28a745; }
+
+
+/* === Modal Stilləri (Tünd Rejim) === */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center; align-items: center; z-index: 1000;
+}
+.modal-content {
+    background: #2e3b43;
+    border: 1px solid #455a64;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+}
+#edit-form label {
+    display: block; margin-top: 15px; margin-bottom: 5px;
+    font-weight: bold; color: #b0bec5;
+}
+#edit-form input[type="text"],
+#edit-form input[type="date"],
+#edit-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #455a64;
+    background: #202a30;
+    color: #eceff1;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+#edit-form input:focus,
+#edit-form textarea:focus {
+    border-color: #FBC02D;
+    background: #2e3b43;
+    box-shadow: 0 0 10px rgba(251, 192, 45, 0.5);
+    outline: none;
+}
+.modal-actions {
+    display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;
+}
+.modal-actions button {
+    padding: 10px 20px; border: none; border-radius: 8px;
+    font-size: 16px; cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.modal-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+#save-task-btn {
+    background: linear-gradient(45deg, #28a745, #218838);
+    color: white;
+}
+#cancel-btn { background-color: #455a64; color: #eceff1; }
+#cancel-btn:hover { background-color: #546e7a; }
