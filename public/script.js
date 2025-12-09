@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
+ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadTasks();
 
-    // 1. YENİ TAPŞIRIQ (Sadə)
+    // 1. Yeni Tapşırıq (Sadə)
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const title = document.getElementById("task-input").value;
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 2. TAPŞIRIQLARI YÜKLƏ
+    // 2. Tapşırıqları Yüklə
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             let dateDisplay = task.due_date ? `<i class="far fa-calendar-alt"></i> ${task.due_date}` : "";
             
-            // Qeyd varsa özü, yoxdursa "Kliklə" yazısı
+            // Qeyd Mətni
             const descText = task.description ? task.description : `<span style="opacity:0.5; font-style:italic;">📝 Qeyd və Tarix əlavə etmək üçün bura toxun...</span>`;
 
             li.innerHTML = `
@@ -85,37 +85,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         return dict[cat] || cat;
     }
 
-    // ACCORDION (Açıb-bağlamaq)
+    // ACCORDION (Açıb-Bağlamaq)
     window.toggleAccordion = (id) => {
         const li = document.getElementById(`task-${id}`);
         li.classList.toggle("active");
     };
 
-    // EDİT REJİMİ (İçindən açılması üçün)
+    // EDİT REJİMİ
     window.editDescription = (event, id, currentTitle, currentDate) => {
-        event.stopPropagation(); // Accordion bağlanmasın
+        event.stopPropagation(); 
         
         const descBox = document.getElementById(`desc-box-${id}`);
-        
-        // Əgər artıq input açıqdırsa, heç nə etmə
-        if (descBox.querySelector("textarea")) return;
+        if (descBox.querySelector("textarea")) return; // Artıq açıqdırsa dayan
 
         let currentText = descBox.innerText;
         if (currentText.includes("bura toxun")) currentText = "";
 
-        // HTML-i dəyişirik (Textarea + Date Input + Save)
+        // Formu Yaradırıq
         descBox.innerHTML = `
             <div class="edit-container" onclick="event.stopPropagation()">
                 <textarea class="edit-textarea" id="input-desc-${id}" placeholder="Qeydini bura yaz...">${currentText}</textarea>
                 <div class="edit-footer">
                     <input type="date" id="input-date-${id}" value="${currentDate}" class="edit-date-input">
-                    <button class="save-btn-small" onclick="saveDescription(${id}, '${currentTitle}')">Yadda saxla</button>
+                    <button class="save-btn-small" onclick="saveDescription(${id}, '${currentTitle}')">Yadda Saxla</button>
                 </div>
             </div>
         `;
     };
 
-    // YADDA SAXLA (Serverə göndərir)
+    // YADDA SAXLA
     window.saveDescription = async (id, title) => {
         const newDesc = document.getElementById(`input-desc-${id}`).value;
         const newDate = document.getElementById(`input-date-${id}`).value;
@@ -131,7 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         if (res.ok) {
-            loadTasks(); // Siyahını yenilə
+            loadTasks();
         } else {
             alert("Xəta baş verdi");
         }

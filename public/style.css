@@ -4,15 +4,20 @@
 :root {
     --primary-color: #ffcc00; /* Sarı */
     --primary-hover: #e6b800;
-    --bg-dark: #121212;
-    --bg-card: #1e1e1e;
+    --bg-dark: #121212;       /* Qara Fon */
+    --bg-card: #1e1e1e;       /* Kart Fonu */
     --text-light: #ffffff;
     --text-grey: #b3b3b3;
     --danger: #ff4d4d;
     --success: #00e676;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
 body {
     background-color: var(--bg-dark);
@@ -24,6 +29,7 @@ body {
     padding: 20px;
 }
 
+/* Əsas Qutu */
 .container {
     background-color: var(--bg-card);
     width: 100%;
@@ -34,92 +40,251 @@ body {
     border: 1px solid #333;
 }
 
-/* HEADER */
+/* Header */
 .app-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 20px; border-bottom: 2px solid var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--primary-color);
     padding-bottom: 15px;
 }
-.main-title { font-size: 1.5rem; color: var(--primary-color); margin:0; }
-.user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-grey); }
 
-#logout-btn { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.main-title {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--text-grey);
+}
+
+#logout-btn {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
 #logout-btn:hover { background: var(--danger); }
 
-/* FORM */
+/* --- FORM (Task əlavə etmə) --- */
 #task-form {
-    background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 20px;
-    display: flex; flex-direction: column; gap: 10px;
+    background: #252525;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-.form-row { display: flex; gap: 10px; }
+
+.form-row {
+    display: flex;
+    gap: 10px;
+}
 
 input, select {
-    background-color: #333; border: 1px solid #444; color: white;
-    border-radius: 8px; padding: 10px; font-size: 0.95rem; outline: none; width: 100%;
+    background-color: #333;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    outline: none;
+    width: 100%;
 }
-input:focus, select:focus { border-color: var(--primary-color); }
+
+input:focus, select:focus {
+    border-color: var(--primary-color);
+}
 
 .add-btn {
-    width: 100%; background-color: var(--primary-color); color: #000; border: none;
-    padding: 10px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold;
+    width: 100%;
+    background-color: var(--primary-color);
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 5px;
 }
 .add-btn:hover { background-color: var(--primary-hover); }
 
-/* LIST */
-ul { list-style: none; padding: 0; }
+/* --- SİYAHI (List) --- */
+ul {
+    list-style: none;
+    padding: 0;
+}
 
 li {
-    background-color: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 10px;
-    display: flex; flex-direction: column;
-    border-left: 4px solid var(--primary-color); transition: 0.2s;
+    background-color: #2a2a2a;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid var(--primary-color);
+    transition: 0.2s;
 }
+
 li:hover { background-color: #333; }
 
-/* Tapşırıq Başlığı Hissəsi */
+/* Başlıq Hissəsi */
 .task-header {
-    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
-.task-info { flex: 1; cursor: pointer; }
-.task-info strong { font-size: 1.1rem; color: white; display: block; }
-.task-meta { font-size: 0.75rem; color: var(--text-grey); margin-top: 4px; display: flex; gap: 10px; align-items: center; }
 
-/* GİZLİ QEYD QUTUSU (Açılan Yer) */
-.task-desc {
-    display: none; /* Gizli */
-    margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;
-    color: #ccc; font-size: 0.9rem; line-height: 1.4;
-    cursor: text; /* Yazı yazıla biləcəyini göstərir */
+.task-info {
+    flex: 1;
+    cursor: pointer;
 }
-.task-desc:hover { color: var(--primary-color); }
+
+.task-info strong {
+    font-size: 1.1rem;
+    color: white;
+    display: block;
+}
+
+.task-meta {
+    font-size: 0.8rem;
+    color: var(--text-grey);
+    margin-top: 5px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* --- GİZLİ QEYD QUTUSU (Açılan Yer) --- */
+.task-desc {
+    display: none; /* Varsayılan olaraq GİZLİDİR */
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+    color: #ccc;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.task-desc:hover {
+    color: var(--primary-color);
+}
 
 /* Aktiv olanda görünür */
-li.active .task-desc { display: block; animation: fadeIn 0.3s ease; }
-
-/* EDİT REJİMİ DİZAYNI (Inputlar açilanda) */
-.edit-container { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
-.edit-textarea {
-    width: 100%; background: #222; border: 1px solid var(--primary-color);
-    color: white; padding: 10px; border-radius: 6px; resize: vertical; min-height: 60px;
+li.active .task-desc {
+    display: block;
+    animation: fadeIn 0.3s ease;
 }
-.edit-footer { display: flex; gap: 10px; align-items: center; }
-.edit-date-input { flex: 1; background: #333; color: white; border: 1px solid #555; padding: 6px; border-radius: 6px; }
+
+/* --- İNLINE EDİT (Redaktə) --- */
+.edit-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.edit-textarea {
+    width: 100%;
+    background: #222;
+    border: 1px solid var(--primary-color);
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.edit-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.edit-date-input {
+    flex: 1;
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 8px;
+    border-radius: 6px;
+}
+
 .save-btn-small {
-    background: var(--primary-color); color: black; border: none; padding: 8px 15px;
-    border-radius: 6px; cursor: pointer; font-weight: bold;
+    background: var(--primary-color);
+    color: black;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
 }
 
 /* Düymələr */
-.badge { padding: 2px 6px; border-radius: 4px; background: #444; color: #ccc; }
-.actions { display: flex; gap: 8px; margin-left: 10px; }
-.check-btn { background: transparent; border: none; cursor: pointer; font-size: 1.4rem; color: #555; }
+.badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #444;
+    color: #ccc;
+    font-size: 0.75rem;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.check-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.4rem;
+    color: #555;
+}
 .check-btn:hover { color: var(--success); }
-.delete-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+
+.delete-btn {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
 .delete-btn:hover { background: var(--danger); color: white; }
 
-/* Tamamlanmış */
-li.completed { border-left-color: var(--success); }
-li.completed strong { text-decoration: line-through; opacity: 0.6; }
-li.completed .check-btn { color: var(--success); }
+/* Tamamlanmış Tapşırıq */
+li.completed {
+    border-left-color: var(--success);
+    opacity: 0.7;
+}
+li.completed strong {
+    text-decoration: line-through;
+}
+li.completed .check-btn {
+    color: var(--success);
+}
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@media (max-width: 600px) { .form-row { flex-direction: column; } }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; }
+}
