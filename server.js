@@ -1,14 +1,11 @@
-// require('dotenv').config(); // Bunu kommentə at
-// Dırnaqların arasına Vercel-dən kopyaladığın o uzun linki yapışdır:
-process.env.POSTGRES_URL = "postgres://default:sifre...@server-adi.aws.neon.tech:5432/verceldb?sslmode=require";
+ // =========================================================
+// 1. DATABASE LİNKİ (Sənin göndərdiyin "Pooled" linki bura qoydum)
+// =========================================================
+process.env.POSTGRES_URL = "postgresql://neondb_owner:npg_Auyr0o2pfaDC@ep-gentle-leaf-adm3ylo1-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require";
 
-const express = require("express");
-const { sql } = require("@vercel/postgres");
-// ... qalan kodlar qalsın
-
-
-
-
+// =========================================================
+// 2. KİTABXANALAR
+// =========================================================
 const express = require("express");
 const { sql } = require("@vercel/postgres");
 const cors = require("cors");
@@ -18,75 +15,53 @@ const path = require("path");
 
 const app = express();
 const port = 3000;
-const JWT_SECRET = "sizin_super_gizli_acariniz_12345";
+const JWT_SECRET = "gizli_acar_123";
 
-// 1. Middleware
 app.use(cors());
 app.use(express.json());
 
-// --- DÜZƏLİŞ: Vercel-də faylları tapmaq üçün ən etibarlı yol ---
-// Biz serverə deyirik: "Statik faylları (CSS, JS) olduğun yerdən götür"
-app.use(express.static(process.cwd())); 
-app.use(express.static(path.join(process.cwd(), 'public'))); // Ehtiyat üçün public-ə də baxır
+// =========================================================
+// 3. STATİK FAYLLAR (CSS, JS, HTML)
+// =========================================================
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Ana səhifəni məcburi olaraq index.html-ə yönləndiririk
-app.get('/', (req, res) => {
-  // Əvvəl public qovluğunu yoxlayır, tapmasa ana qovluğa baxır
-  const publicPath = path.join(process.cwd(), 'public', 'index.html');
-  const rootPath = path.join(process.cwd(), 'index.html');
-  
-  res.sendFile(rootPath, (err) => {
-     if (err) res.sendFile(publicPath);
-  });
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
-// 2. Database Cədvəlləri (Xəta olsa server dayanmasın deyə try-catch gücləndirildi)
+// =========================================================
+// 4. DATABASE BAŞLANĞICI
+// =========================================================
 async function initDB() {
   try {
-    await sql`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'user'
-      );
-    `;
-
-    await sql`
-      CREATE TABLE IF NOT EXISTS tasks (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        title TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        category TEXT NOT NULL DEFAULT 'general',
-        description TEXT,
-        due_date TEXT
-      );
-    `;
-    console.log("Postgres cədvəlləri hazırdır.");
+    await sql`CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user'
+    );`;
+    await sql`CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', category TEXT NOT NULL DEFAULT 'general',
+        description TEXT, due_date TEXT
+    );`;
+    console.log("✅ Postgres cədvəlləri hazırdır.");
   } catch (err) {
-    console.error("Database Başlanğıc Xətası (Narahat olma, server işləyir):", err.message);
+    console.error("❌ Database Xətası:", err.message);
   }
 }
-
-// Server açılan kimi bazanı yoxla
 initDB();
 
-// === API Endpoints ===
-
+// =========================================================
+// 5. API ENDPOINTS
+// =========================================================
 app.post("/api/users/register", async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: "Məlumat çatışmır." });
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await sql`
-      INSERT INTO users (username, password_hash) VALUES (${username}, ${hashedPassword})
-      RETURNING id
-    `;
+    const result = await sql`INSERT INTO users (username, password_hash) VALUES (${username}, ${hashedPassword}) RETURNING id`;
     res.status(201).json({ message: "Uğurlu", userId: result.rows[0].id });
   } catch (err) {
-    console.error("Register Error:", err);
-    res.status(500).json({ error: "Server xətası." });
+    if (err.code === '23505') return res.status(400).json({ error: "Bu ad artıq tutulub." });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -100,10 +75,7 @@ app.post("/api/users/login", async (req, res) => {
     }
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ message: "Giriş uğurlu", token, role: user.role });
-  } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({ error: "Server xətası." });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 function authenticateToken(req, res, next) {
@@ -117,41 +89,18 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Tasks API
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   try {
     const result = await sql`SELECT * FROM tasks WHERE user_id = ${req.user.id} ORDER BY id DESC`;
     res.json({ tasks: result.rows });
-  } catch (err) { 
-    console.error("Get Tasks Error:", err);
-    res.status(500).json({ error: "Server xətası" }); 
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post("/api/tasks", authenticateToken, async (req, res) => {
   const { title, category, description, due_date } = req.body;
   try {
-    const result = await sql`
-      INSERT INTO tasks (user_id, title, category, description, due_date) 
-      VALUES (${req.user.id}, ${title}, ${category || 'general'}, ${description}, ${due_date})
-      RETURNING *
-    `;
+    const result = await sql`INSERT INTO tasks (user_id, title, category, description, due_date) VALUES (${req.user.id}, ${title}, ${category || 'general'}, ${description}, ${due_date}) RETURNING *`;
     res.status(201).json(result.rows[0]);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.put("/api/tasks/:id", authenticateToken, async (req, res) => {
-  const { title, description, due_date } = req.body;
-  try {
-    await sql`UPDATE tasks SET title=${title}, description=${description}, due_date=${due_date} WHERE id=${req.params.id} AND user_id=${req.user.id}`;
-    res.json({ message: "Yeniləndi" });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.put("/api/tasks/:id/status", authenticateToken, async (req, res) => {
-  try {
-    await sql`UPDATE tasks SET status=${req.body.status} WHERE id=${req.params.id} AND user_id=${req.user.id}`;
-    res.json({ message: "Status dəyişdi" });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -162,41 +111,4 @@ app.delete("/api/tasks/:id", authenticateToken, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Admin API
-function authenticateAdmin(req, res, next) {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: "Admin deyilsiniz" });
-  next();
-}
-
-app.get("/api/admin/users", [authenticateToken, authenticateAdmin], async (req, res) => {
-  const result = await sql`SELECT id, username, role FROM users`;
-  res.json({ users: result.rows });
-});
-
-app.delete("/api/admin/users/:id", [authenticateToken, authenticateAdmin], async (req, res) => {
-  await sql`DELETE FROM users WHERE id=${req.params.id}`;
-  res.json({ message: "İstifadəçi silindi" });
-});
-
-app.put("/api/admin/users/:id/role", [authenticateToken, authenticateAdmin], async (req, res) => {
-  await sql`UPDATE users SET role=${req.body.newRole} WHERE id=${req.params.id}`;
-  res.json({ message: "Rol dəyişdirildi" });
-});
-
-app.put("/api/admin/users/:id/reset-password", [authenticateToken, authenticateAdmin], async (req, res) => {
-  const { newPassword } = req.body;
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  await sql`UPDATE users SET password_hash=${hashedPassword} WHERE id=${req.params.id}`;
-  res.json({ message: "Parol resetləndi" });
-});
-
-app.listen(port, () => {
-  console.log(`Server işləyir: http://localhost:${port}`);
-});
-
-
-
-
-
-
-
+app.listen(port, () => console.log(`Server işləyir: http://localhost:${port}`));
