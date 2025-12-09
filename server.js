@@ -1,3 +1,14 @@
+// require('dotenv').config(); // Bunu kommentə at
+// Dırnaqların arasına Vercel-dən kopyaladığın o uzun linki yapışdır:
+process.env.POSTGRES_URL = "postgres://default:sifre...@server-adi.aws.neon.tech:5432/verceldb?sslmode=require";
+
+const express = require("express");
+const { sql } = require("@vercel/postgres");
+// ... qalan kodlar qalsın
+
+
+
+
 const express = require("express");
 const { sql } = require("@vercel/postgres");
 const cors = require("cors");
@@ -182,3 +193,10 @@ app.put("/api/admin/users/:id/reset-password", [authenticateToken, authenticateA
 app.listen(port, () => {
   console.log(`Server işləyir: http://localhost:${port}`);
 });
+
+
+
+
+
+
+
