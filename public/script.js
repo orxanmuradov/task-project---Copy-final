@@ -1,153 +1,45 @@
- document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem("token");
-    if (!token) { window.location.href = "login.html"; return; }
-
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        document.getElementById("welcome-message").textContent = `Xoş gəldin, ${payload.username}`;
-    } catch(e) {}
-
-    document.getElementById("logout-btn").addEventListener("click", () => {
-        localStorage.clear(); window.location.href = "login.html";
-    });
-
-    await loadTasks();
-
-    // 1. Yeni Tapşırıq (Sadə)
-    document.getElementById("task-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const title = document.getElementById("task-input").value;
-        const category = document.getElementById("task-category").value;
-
-        const res = await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, category, description: "", due_date: null })
-        });
-
-        if (res.ok) {
-            document.getElementById("task-form").reset();
-            loadTasks();
-        }
-    });
-
-    // 2. Tapşırıqları Yüklə
-    async function loadTasks() {
-        const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
-        const data = await res.json();
-        const list = document.getElementById("task-list");
-        list.innerHTML = "";
-
-        if (!data.tasks || data.tasks.length === 0) {
-            list.innerHTML = "<li style='text-align:center; color:#555;'>Hələ tapşırıq yoxdur.</li>";
-            return;
-        }
-
-        data.tasks.forEach(task => {
-            const li = document.createElement("li");
-            li.id = `task-${task.id}`;
-            if (task.status === 'completed') li.classList.add('completed');
-
-            let dateDisplay = task.due_date ? `<i class="far fa-calendar-alt"></i> ${task.due_date}` : "";
-            
-            // Qeyd Mətni
-            const descText = task.description ? task.description : `<span style="opacity:0.5; font-style:italic;">📝 Qeyd və Tarix əlavə etmək üçün bura toxun...</span>`;
-
-            li.innerHTML = `
-                <div class="task-header">
-                    <div class="task-info" onclick="toggleAccordion(${task.id})">
-                        <strong>${task.title} <i class="fas fa-chevron-down" style="font-size:0.8rem; color:#555; margin-left:5px;"></i></strong>
-                        <div class="task-meta">
-                            <span class="badge">${translate(task.category)}</span>
-                            ${dateDisplay ? `<span style="margin-left:5px; color:${task.due_date ? '#ffcc00' : ''}">${dateDisplay}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="actions">
-                        <button onclick="toggleStatus(${task.id}, '${task.status}')" class="check-btn">
-                            <i class="fas ${task.status === 'completed' ? 'fa-check-circle' : 'fa-circle'}"></i>
-                        </button>
-                        <button onclick="deleteTask(${task.id})" class="delete-btn">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event, ${task.id}, '${task.title}', '${task.due_date || ''}')">
-                    ${descText}
-                </div>
-            `;
-            list.appendChild(li);
-        });
-    }
-
-    function translate(cat) {
-        const dict = { 'general': 'Ümumi', 'work': 'İş', 'home': 'Ev', 'shopping': 'Alış-veriş' };
-        return dict[cat] || cat;
-    }
-
-    // ACCORDION (Açıb-Bağlamaq)
-    window.toggleAccordion = (id) => {
-        const li = document.getElementById(`task-${id}`);
-        li.classList.toggle("active");
-    };
-
-    // EDİT REJİMİ
-    window.editDescription = (event, id, currentTitle, currentDate) => {
-        event.stopPropagation(); 
-        
-        const descBox = document.getElementById(`desc-box-${id}`);
-        if (descBox.querySelector("textarea")) return; // Artıq açıqdırsa dayan
-
-        let currentText = descBox.innerText;
-        if (currentText.includes("bura toxun")) currentText = "";
-
-        // Formu Yaradırıq
-        descBox.innerHTML = `
-            <div class="edit-container" onclick="event.stopPropagation()">
-                <textarea class="edit-textarea" id="input-desc-${id}" placeholder="Qeydini bura yaz...">${currentText}</textarea>
-                <div class="edit-footer">
-                    <input type="date" id="input-date-${id}" value="${currentDate}" class="edit-date-input">
-                    <button class="save-btn-small" onclick="saveDescription(${id}, '${currentTitle}')">Yadda Saxla</button>
-                </div>
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tapşırıqlarım</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1 class="main-title"><i class="fas fa-tasks"></i> Tapşırıqlar</h1>
+            <div class="user-info">
+                <span id="welcome-message"></span>
+                <button id="logout-btn" class="delete-btn" title="Çıxış"><i class="fas fa-sign-out-alt"></i></button>
             </div>
-        `;
-    };
+        </header>
 
-    // YADDA SAXLA
-    window.saveDescription = async (id, title) => {
-        const newDesc = document.getElementById(`input-desc-${id}`).value;
-        const newDate = document.getElementById(`input-date-${id}`).value;
-        
-        const res = await fetch(`/api/tasks/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ 
-                title: title, 
-                description: newDesc, 
-                due_date: newDate ? newDate : null 
-            })
-        });
+        <form id="task-form">
+            <div class="form-row">
+                <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
+                
+                <select id="task-category">
+                    <option value="general">Ümumi</option>
+                    <option value="work">İş</option>
+                    <option value="home">Ev</option>
+                    <option value="shopping">Alış-veriş</option>
+                    <option value="new_category" style="font-weight:bold; color:orange;">+ Yeni Kateqoriya</option>
+                </select>
+            </div>
 
-        if (res.ok) {
-            loadTasks();
-        } else {
-            alert("Xəta baş verdi");
-        }
-    };
+            <div id="new-cat-container" style="display: none; margin-bottom: 10px;">
+                <input type="text" id="new-cat-input" placeholder="Kateqoriya adını yazın..." style="border-color: #ffcc00;">
+            </div>
+            
+            <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
+        </form>
 
-    window.toggleStatus = async (id, status) => {
-        const newStatus = status === 'completed' ? 'pending' : 'completed';
-        await fetch(`/api/tasks/${id}/status`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ status: newStatus })
-        });
-        loadTasks();
-    };
+        <ul id="task-list"></ul>
+    </div>
 
-    window.deleteTask = async (id) => {
-        if(!confirm("Silmək istəyirsən?")) return;
-        await fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
-        loadTasks();
-    };
-});
+    <script src="script.js"></script>
+</body>
+</html>

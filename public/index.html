@@ -20,18 +20,24 @@
         <form id="task-form">
             <div class="form-row">
                 <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
+                
                 <select id="task-category">
                     <option value="general">Ümumi</option>
                     <option value="work">İş</option>
                     <option value="home">Ev</option>
                     <option value="shopping">Alış-veriş</option>
+                    <option value="new_category" style="font-weight:bold; color:orange;">+ Yeni Kateqoriya</option>
                 </select>
             </div>
+
+            <div id="new-cat-container" style="display: none; margin-bottom: 10px;">
+                <input type="text" id="new-cat-input" placeholder="Kateqoriya adını yazın..." style="border-color: #ffcc00;">
+            </div>
+            
             <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
         </form>
 
-        <ul id="task-list">
-            </ul>
+        <ul id="task-list"></ul>
     </div>
 
     <script src="script.js"></script>
