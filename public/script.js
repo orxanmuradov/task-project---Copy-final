@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
+ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
@@ -18,8 +18,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         const title = document.getElementById("task-input").value;
         const category = document.getElementById("task-category").value;
-        const description = document.getElementById("task-desc").value;
-        const date = document.getElementById("task-date").value;
+        // Əsas ekranda qeyd və tarix yazmağa ehtiyac yoxdursa, boş göndəririk (sonradan əlavə edəcək)
+        // Amma inputlar varsa götürürük:
+        const descInput = document.getElementById("task-desc");
+        const dateInput = document.getElementById("task-date");
+        
+        const description = descInput ? descInput.value : ""; 
+        const date = dateInput ? dateInput.value : null;
 
         const res = await fetch("/api/tasks", {
             method: "POST",
@@ -30,8 +35,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (res.ok) {
             document.getElementById("task-form").reset();
             loadTasks();
-        } else {
-            alert("Xəta!");
         }
     });
 
@@ -48,21 +51,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         data.tasks.forEach(task => {
             const li = document.createElement("li");
-            li.id = `task-${task.id}`; // Li-yə ID veririk
+            li.id = `task-${task.id}`;
             if (task.status === 'completed') li.classList.add('completed');
 
             let dateDisplay = task.due_date ? `<i class="far fa-calendar-alt"></i> ${task.due_date}` : "";
 
+            // Qeyd varsa göstər, yoxdursa "Yazmaq üçün kliklə" yaz
+            const descText = task.description ? task.description : `<span style="opacity:0.5; font-style:italic;">📝 Qeyd yoxdur (Yazmaq üçün bura kliklə)</span>`;
+
             li.innerHTML = `
                 <div class="task-header">
-                    <div class="task-info" onclick="toggleDescription(${task.id})">
+                    <div class="task-info" onclick="toggleAccordion(${task.id})">
                         <strong>${task.title} <i class="fas fa-chevron-down" style="font-size:0.8rem; color:#555; margin-left:5px;"></i></strong>
                         <div class="task-meta">
                             <span class="badge">${translate(task.category)}</span>
                             ${dateDisplay ? `<span>${dateDisplay}</span>` : ''}
                         </div>
                     </div>
-                    
                     <div class="actions">
                         <button onclick="toggleStatus(${task.id}, '${task.status}')" class="check-btn">
                             <i class="fas ${task.status === 'completed' ? 'fa-check-circle' : 'fa-circle'}"></i>
@@ -73,9 +78,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                 </div>
 
-                <div class="task-desc">
-                    <p style="margin-bottom:5px; color:var(--primary-color);">📝 Qeyd:</p>
-                    ${task.description || "Qeyd yoxdur."}
+                <div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event, ${task.id}, '${task.title}', '${task.due_date || ''}')">
+                    ${descText}
                 </div>
             `;
             list.appendChild(li);
@@ -87,10 +91,56 @@ document.addEventListener("DOMContentLoaded", async () => {
         return dict[cat] || cat;
     }
 
-    // --- YENİ FUNKSİYA: Qeydi Açıb/Bağlamaq ---
-    window.toggleDescription = (id) => {
+    // --- ACCORDION AÇIB-BAĞLAMAQ ---
+    window.toggleAccordion = (id) => {
         const li = document.getElementById(`task-${id}`);
-        li.classList.toggle("active"); // 'active' klassını əlavə edir və ya silir
+        li.classList.toggle("active");
+    };
+
+    // --- QEYDİ DƏYİŞMƏK (INLINE EDIT) ---
+    window.editDescription = (event, id, currentTitle, currentDate) => {
+        event.stopPropagation(); // Accordion bağlanmasın deyə
+        
+        const descBox = document.getElementById(`desc-box-${id}`);
+        
+        // Əgər artıq açıqdırsa, heç nə etmə
+        if (descBox.querySelector("textarea")) return;
+
+        // Mövcud mətni götür (əgər "Qeyd yoxdur" yazısıdırsa boş götür)
+        let currentText = descBox.innerText;
+        if (currentText.includes("Qeyd yoxdur")) currentText = "";
+
+        // Qutunun içinə Form qoyuruq
+        descBox.innerHTML = `
+            <div class="edit-container" onclick="event.stopPropagation()">
+                <textarea class="edit-textarea" id="input-desc-${id}" placeholder="Qeydini bura yaz...">${currentText}</textarea>
+                <div class="edit-actions">
+                    <button class="save-btn-small" onclick="saveDescription(${id}, '${currentTitle}', '${currentDate}')">Yadda saxla</button>
+                </div>
+            </div>
+        `;
+    };
+
+    // --- QEYDİ YADDA SAXLAMAQ ---
+    window.saveDescription = async (id, title, date) => {
+        const newDesc = document.getElementById(`input-desc-${id}`).value;
+        
+        // Serverə köhnə başlıq və tarix + yeni qeydi göndəririk
+        const res = await fetch(`/api/tasks/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ 
+                title: title, 
+                due_date: (date === 'null' || date === '') ? null : date, 
+                description: newDesc 
+            })
+        });
+
+        if (res.ok) {
+            loadTasks(); // Siyahını yenilə ki, yeni qeyd görünsün
+        } else {
+            alert("Xəta baş verdi");
+        }
     };
 
     window.toggleStatus = async (id, status) => {
