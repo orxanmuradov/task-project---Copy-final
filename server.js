@@ -78,7 +78,9 @@ function authenticateToken(req, res, next) {
   jwt.verify(t, JWT_SECRET, (err, u) => { if(err) return res.sendStatus(403); req.user = u; next(); });
 }
 
-// User Tasks
+// --- USER TASKS API ---
+
+// 1. Tapşırıqları Gətir
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   try {
     const result = await sql`SELECT * FROM tasks WHERE user_id = ${req.user.id} ORDER BY id DESC`;
@@ -86,6 +88,7 @@ app.get("/api/tasks", authenticateToken, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// 2. Yeni Tapşırıq
 app.post("/api/tasks", authenticateToken, async (req, res) => {
   const { title, category, description, due_date } = req.body;
   try {
@@ -94,6 +97,24 @@ app.post("/api/tasks", authenticateToken, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// 3. Tapşırığı Yenilə (Qeyd və Tarix) - Bayaq bu yox idi!
+app.put("/api/tasks/:id", authenticateToken, async (req, res) => {
+    const { title, description, due_date } = req.body;
+    try {
+        await sql`UPDATE tasks SET title=${title}, description=${description}, due_date=${due_date} WHERE id=${req.params.id} AND user_id=${req.user.id}`;
+        res.json({ message: "Yeniləndi" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 4. Statusu Dəyiş (Bitdi/Bitmədi) - Bayaq bu da yox idi!
+app.put("/api/tasks/:id/status", authenticateToken, async (req, res) => {
+    try {
+        await sql`UPDATE tasks SET status=${req.body.status} WHERE id=${req.params.id} AND user_id=${req.user.id}`;
+        res.json({ message: "Status dəyişdi" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 5. Sil
 app.delete("/api/tasks/:id", authenticateToken, async (req, res) => {
   try {
     await sql`DELETE FROM tasks WHERE id=${req.params.id} AND user_id=${req.user.id}`;
@@ -117,22 +138,12 @@ app.delete("/api/admin/users/:id", [authenticateToken, authenticateAdmin], async
   res.json({ message: "Silindi" });
 });
 
-// 👇👇👇 YENİ ƏLAVƏ EDİLƏN HİSSƏ (Bunu unutmuşdum) 👇👇👇
 app.get("/api/admin/tasks", [authenticateToken, authenticateAdmin], async (req, res) => {
   try {
-    // Tapşırıqları və onları yaradan istifadəçinin adını birləşdirib gətiririk
-    const result = await sql`
-      SELECT tasks.*, users.username 
-      FROM tasks 
-      JOIN users ON tasks.user_id = users.id 
-      ORDER BY tasks.id DESC
-    `;
+    const result = await sql`SELECT tasks.*, users.username FROM tasks JOIN users ON tasks.user_id = users.id ORDER BY tasks.id DESC`;
     res.json({ tasks: result.rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
-// 👆👆👆 ------------------------------------------ 👆👆👆
 
 app.listen(port, () => {
   console.log(`🚀 Server işləyir: http://localhost:${port}`);
