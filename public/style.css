@@ -2,7 +2,7 @@
    ÜMUMİ SİTİL (Sarı & Qara)
    ========================================= */
 :root {
-    --primary-color: #ffcc00; /* Sarı */
+    --primary-color: #ffcc00;
     --primary-hover: #e6b800;
     --bg-dark: #121212;
     --bg-card: #1e1e1e;
@@ -46,15 +46,13 @@ body {
 #logout-btn { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
 #logout-btn:hover { background: var(--danger); }
 
-/* --- YENİ FORM DİZAYNI --- */
+/* FORM */
 #task-form {
     background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 20px;
     display: flex; flex-direction: column; gap: 10px;
 }
 
-.form-row {
-    display: flex; gap: 10px;
-}
+.form-row { display: flex; gap: 10px; }
 
 input, select {
     background-color: #333; border: 1px solid #444; color: white;
@@ -62,51 +60,82 @@ input, select {
 }
 input:focus, select:focus { border-color: var(--primary-color); }
 
-/* Düymə */
 button[type="submit"] {
     background-color: var(--primary-color); color: #000; border: none;
-    padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;
-    min-width: 50px;
+    padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; min-width: 50px;
 }
 button[type="submit"]:hover { background-color: var(--primary-hover); }
 
-/* --- SİYAHI --- */
+/* --- SİYAHI (List) --- */
 ul { list-style: none; padding: 0; }
 
 li {
     background-color: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 10px;
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex; flex-direction: column; /* Elementləri alt-alta düzmək üçün */
     border-left: 4px solid var(--primary-color); transition: 0.2s;
 }
 li:hover { background-color: #333; }
 
-.task-info { flex: 1; }
-.task-info strong { display: block; font-size: 1.1rem; color: white; }
-.task-desc { font-size: 0.85rem; color: #aaa; margin-top: 4px; font-style: italic; }
-.task-meta { font-size: 0.75rem; color: var(--text-grey); margin-top: 6px; display: flex; gap: 10px; align-items: center; }
+/* Tapşırığın Yuxarı Hissəsi (Başlıq və Düymələr) */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
 
+.task-info {
+    flex: 1;
+    cursor: pointer; /* Üzərinə gələndə əl işarəsi çıxsın */
+}
+
+.task-info strong {
+    font-size: 1.1rem; color: white; display: block;
+}
+
+.task-meta {
+    font-size: 0.75rem; color: var(--text-grey); margin-top: 4px; display: flex; gap: 10px; align-items: center;
+}
+
+/* --- GİZLİ QEYD HİSSƏSİ --- */
+.task-desc {
+    display: none; /* Varsayılan olaraq GİZLİDİR */
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+    color: #ccc;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    animation: fadeIn 0.3s ease;
+}
+
+/* JS ilə "active" klası əlavə olunanda görünəcək */
+li.active .task-desc {
+    display: block;
+}
+
+/* Animasiya */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Badges & Buttons */
 .badge { padding: 2px 6px; border-radius: 4px; background: #444; color: #ccc; }
-
 .actions { display: flex; gap: 8px; margin-left: 10px; }
 
-.check-btn {
-    background: transparent; border: none; cursor: pointer; font-size: 1.4rem;
-    color: #555; transition: 0.2s;
-}
+.check-btn { background: transparent; border: none; cursor: pointer; font-size: 1.4rem; color: #555; transition: 0.2s; }
 .check-btn:hover { color: var(--success); }
 
-/* İcra Olunanda */
-li.completed { opacity: 0.6; border-left-color: var(--success); }
+/* Completed */
+li.completed { border-left-color: var(--success); }
+li.completed .task-info strong { text-decoration: line-through; opacity: 0.6; }
 li.completed .check-btn { color: var(--success); }
-li.completed strong { text-decoration: line-through; }
 
-.delete-btn {
-    background: transparent; border: 1px solid var(--danger); color: var(--danger);
-    padding: 6px 10px; border-radius: 6px; cursor: pointer;
-}
+.delete-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 .delete-btn:hover { background: var(--danger); color: white; }
 
-/* RESPONSIVE */
+/* Responsive */
 @media (max-width: 600px) {
     .form-row { flex-direction: column; }
     button[type="submit"] { width: 100%; }

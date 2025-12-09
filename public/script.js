@@ -13,15 +13,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadTasks();
 
-    // --- YENİ TAPŞIRIQ ƏLAVƏ ETMƏK ---
+    // Yeni Tapşırıq
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
-        
-        // Xanadakı məlumatları götürürük
         const title = document.getElementById("task-input").value;
         const category = document.getElementById("task-category").value;
-        const description = document.getElementById("task-desc").value; // Yeni Qeyd
-        const date = document.getElementById("task-date").value;       // Yeni Tarix
+        const description = document.getElementById("task-desc").value;
+        const date = document.getElementById("task-date").value;
 
         const res = await fetch("/api/tasks", {
             method: "POST",
@@ -30,10 +28,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         if (res.ok) {
-            document.getElementById("task-form").reset(); // Formu təmizlə
+            document.getElementById("task-form").reset();
             loadTasks();
         } else {
-            alert("Xəta baş verdi!");
+            alert("Xəta!");
         }
     });
 
@@ -50,30 +48,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         data.tasks.forEach(task => {
             const li = document.createElement("li");
+            li.id = `task-${task.id}`; // Li-yə ID veririk
             if (task.status === 'completed') li.classList.add('completed');
 
-            // Tarix formatı
-            let dateDisplay = "";
-            if (task.due_date) {
-                dateDisplay = `<i class="far fa-calendar-alt"></i> ${task.due_date}`;
-            }
+            let dateDisplay = task.due_date ? `<i class="far fa-calendar-alt"></i> ${task.due_date}` : "";
 
             li.innerHTML = `
-                <div class="task-info">
-                    <strong>${task.title}</strong>
-                    ${task.description ? `<div class="task-desc">${task.description}</div>` : ''}
-                    <div class="task-meta">
-                        <span class="badge">${translate(task.category)}</span>
-                        ${dateDisplay ? `<span>${dateDisplay}</span>` : ''}
+                <div class="task-header">
+                    <div class="task-info" onclick="toggleDescription(${task.id})">
+                        <strong>${task.title} <i class="fas fa-chevron-down" style="font-size:0.8rem; color:#555; margin-left:5px;"></i></strong>
+                        <div class="task-meta">
+                            <span class="badge">${translate(task.category)}</span>
+                            ${dateDisplay ? `<span>${dateDisplay}</span>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button onclick="toggleStatus(${task.id}, '${task.status}')" class="check-btn">
+                            <i class="fas ${task.status === 'completed' ? 'fa-check-circle' : 'fa-circle'}"></i>
+                        </button>
+                        <button onclick="deleteTask(${task.id})" class="delete-btn">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
-                <div class="actions">
-                    <button onclick="toggleStatus(${task.id}, '${task.status}')" class="check-btn">
-                        <i class="fas ${task.status === 'completed' ? 'fa-check-circle' : 'fa-circle'}"></i>
-                    </button>
-                    <button onclick="deleteTask(${task.id})" class="delete-btn">
-                        <i class="fas fa-trash"></i>
-                    </button>
+
+                <div class="task-desc">
+                    <p style="margin-bottom:5px; color:var(--primary-color);">📝 Qeyd:</p>
+                    ${task.description || "Qeyd yoxdur."}
                 </div>
             `;
             list.appendChild(li);
@@ -84,6 +86,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const dict = { 'general': 'Ümumi', 'work': 'İş', 'home': 'Ev', 'shopping': 'Alış-veriş' };
         return dict[cat] || cat;
     }
+
+    // --- YENİ FUNKSİYA: Qeydi Açıb/Bağlamaq ---
+    window.toggleDescription = (id) => {
+        const li = document.getElementById(`task-${id}`);
+        li.classList.toggle("active"); // 'active' klassını əlavə edir və ya silir
+    };
 
     window.toggleStatus = async (id, status) => {
         const newStatus = status === 'completed' ? 'pending' : 'completed';
