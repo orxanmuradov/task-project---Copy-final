@@ -1,128 +1,44 @@
- /* =========================================
-   ÜMUMİ SİTİL (Sarı & Qara)
-   ========================================= */
-:root {
-    --primary-color: #ffcc00;
-    --primary-hover: #e6b800;
-    --bg-dark: #121212;
-    --bg-card: #1e1e1e;
-    --text-light: #ffffff;
-    --text-grey: #b3b3b3;
-    --danger: #ff4d4d;
-    --success: #00e676;
-}
+ /* ... Yuxarıdakı kodlar qalır ... */
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-}
-
-.container {
-    background-color: var(--bg-card);
-    width: 100%;
-    max-width: 500px;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid #333;
-}
-
-/* Header */
-.app-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 20px; border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 15px;
-}
-.main-title { font-size: 1.5rem; color: var(--primary-color); margin:0; }
-.user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-grey); }
-
-#logout-btn { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-#logout-btn:hover { background: var(--danger); }
-
-/* FORM */
-#task-form {
-    background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 20px;
-    display: flex; flex-direction: column; gap: 10px;
-}
-
-.form-row { display: flex; gap: 10px; }
-
-input, select {
-    background-color: #333; border: 1px solid #444; color: white;
-    border-radius: 8px; padding: 10px; font-size: 0.95rem; outline: none; width: 100%;
-}
-input:focus, select:focus { border-color: var(--primary-color); }
-
-button[type="submit"] {
-    background-color: var(--primary-color); color: #000; border: none;
-    padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; min-width: 50px;
-}
-button[type="submit"]:hover { background-color: var(--primary-hover); }
-
-/* LIST */
-ul { list-style: none; padding: 0; }
-
-li {
-    background-color: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 10px;
-    display: flex; flex-direction: column; 
-    border-left: 4px solid var(--primary-color); transition: 0.2s;
-}
-li:hover { background-color: #333; }
-
-/* Task Header (Başlıq hissəsi) */
-.task-header {
-    display: flex; justify-content: space-between; align-items: center; width: 100%;
-}
-
-.task-info { flex: 1; cursor: pointer; }
-.task-info strong { font-size: 1.1rem; color: white; display: block; }
-.task-meta { font-size: 0.75rem; color: var(--text-grey); margin-top: 4px; display: flex; gap: 10px; align-items: center; }
-
-/* --- GİZLİ QEYD VƏ EDİT HİSSƏSİ --- */
-.task-desc {
-    display: none; /* Varsayılan gizlidir */
-    margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;
-    color: #ccc; font-size: 0.9rem; line-height: 1.4;
-    cursor: pointer; /* Kliklənə bilən olduğunu göstər */
-}
-.task-desc:hover { color: var(--primary-color); } /* Üstünə gələndə rəng dəyişsin */
-
-/* Li aktiv olanda açılsın */
-li.active .task-desc { display: block; animation: fadeIn 0.3s ease; }
-
-/* İNLINE EDİT (Yazı yazmaq üçün açılan yer) */
+/* --- İNLINE EDİT DİZAYNI --- */
 .edit-container {
-    display: flex; flex-direction: column; gap: 5px; margin-top: 5px;
+    display: flex; flex-direction: column; gap: 8px; margin-top: 5px;
 }
+
 .edit-textarea {
     width: 100%; background: #222; border: 1px solid var(--primary-color);
-    color: white; padding: 8px; border-radius: 6px; resize: vertical; min-height: 60px;
+    color: white; padding: 10px; border-radius: 6px; resize: vertical; min-height: 80px;
+    font-family: inherit;
 }
-.edit-actions { display: flex; gap: 5px; justify-content: flex-end; }
+
+.edit-footer {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+
+/* Tarix xanası (Qeyd yerinin içində) */
+.edit-date-input {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 6px;
+    border-radius: 6px;
+    outline: none;
+    flex: 1; /* Boş yeri tutsun */
+}
+.edit-date-input:focus {
+    border-color: var(--primary-color);
+}
+
 .save-btn-small {
     background: var(--primary-color); color: black; border: none;
-    padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
+    padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;
+}
+.save-btn-small:hover {
+    background: var(--primary-hover);
 }
 
-/* Badges & Actions */
-.badge { padding: 2px 6px; border-radius: 4px; background: #444; color: #ccc; }
-.actions { display: flex; gap: 8px; margin-left: 10px; }
-.check-btn { background: transparent; border: none; cursor: pointer; font-size: 1.4rem; color: #555; transition: 0.2s; }
-.check-btn:hover { color: var(--success); }
-.delete-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
-.delete-btn:hover { background: var(--danger); color: white; }
-
-/* Completed */
-li.completed { border-left-color: var(--success); }
-li.completed strong { text-decoration: line-through; opacity: 0.6; }
-li.completed .check-btn { color: var(--success); }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@media (max-width: 600px) { .form-row { flex-direction: column; } button[type="submit"] { width: 100%; } }
+/* Əlavə etmə düyməsi (Formda) */
+.add-btn {
+    width: 100%; margin-top: 10px; background-color: var(--primary-color);
+    color: black; padding: 10px; border-radius: 8px; font-size: 1.2rem; border: none; cursor: pointer;
+}
