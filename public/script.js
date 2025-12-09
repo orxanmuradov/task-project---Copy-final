@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadTasks();
 
-    // Yeni Tapşırıq (Sadəcə başlıq və kateqoriya ilə)
+    // 1. YENİ TAPŞIRIQ (Sadə)
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const title = document.getElementById("task-input").value;
@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    // 2. TAPŞIRIQLARI YÜKLƏ
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -47,11 +48,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             li.id = `task-${task.id}`;
             if (task.status === 'completed') li.classList.add('completed');
 
-            // Tarixi formatla (göstərmək üçün)
             let dateDisplay = task.due_date ? `<i class="far fa-calendar-alt"></i> ${task.due_date}` : "";
-
-            // Qeyd mətni
-            const descText = task.description ? task.description : `<span style="opacity:0.5; font-style:italic;">📝 Qeyd və Tarix əlavə etmək üçün kliklə...</span>`;
+            
+            // Qeyd varsa özü, yoxdursa "Kliklə" yazısı
+            const descText = task.description ? task.description : `<span style="opacity:0.5; font-style:italic;">📝 Qeyd və Tarix əlavə etmək üçün bura toxun...</span>`;
 
             li.innerHTML = `
                 <div class="task-header">
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <strong>${task.title} <i class="fas fa-chevron-down" style="font-size:0.8rem; color:#555; margin-left:5px;"></i></strong>
                         <div class="task-meta">
                             <span class="badge">${translate(task.category)}</span>
-                            ${dateDisplay ? `<span>${dateDisplay}</span>` : ''}
+                            ${dateDisplay ? `<span style="margin-left:5px; color:${task.due_date ? '#ffcc00' : ''}">${dateDisplay}</span>` : ''}
                         </div>
                     </div>
                     <div class="actions">
@@ -85,24 +85,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         return dict[cat] || cat;
     }
 
+    // ACCORDION (Açıb-bağlamaq)
     window.toggleAccordion = (id) => {
         const li = document.getElementById(`task-${id}`);
         li.classList.toggle("active");
     };
 
-    // --- YENİLƏNMİŞ EDİT FUNKSİYASI (Tarix və Qeyd) ---
+    // EDİT REJİMİ (İçindən açılması üçün)
     window.editDescription = (event, id, currentTitle, currentDate) => {
-        event.stopPropagation();
+        event.stopPropagation(); // Accordion bağlanmasın
         
         const descBox = document.getElementById(`desc-box-${id}`);
         
-        // Əgər artıq açıqdırsa, təkrar açma
+        // Əgər artıq input açıqdırsa, heç nə etmə
         if (descBox.querySelector("textarea")) return;
 
         let currentText = descBox.innerText;
-        if (currentText.includes("kliklə")) currentText = "";
+        if (currentText.includes("bura toxun")) currentText = "";
 
-        // Formu yaradırıq (Textarea + Date Input + Save Button)
+        // HTML-i dəyişirik (Textarea + Date Input + Save)
         descBox.innerHTML = `
             <div class="edit-container" onclick="event.stopPropagation()">
                 <textarea class="edit-textarea" id="input-desc-${id}" placeholder="Qeydini bura yaz...">${currentText}</textarea>
@@ -114,25 +115,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
     };
 
-    // --- YADDA SAXLA (Error verməməsi üçün düzəltdik) ---
+    // YADDA SAXLA (Serverə göndərir)
     window.saveDescription = async (id, title) => {
         const newDesc = document.getElementById(`input-desc-${id}`).value;
-        const newDate = document.getElementById(`input-date-${id}`).value; // Tarixi götürürük
+        const newDate = document.getElementById(`input-date-${id}`).value;
         
         const res = await fetch(`/api/tasks/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ 
                 title: title, 
-                description: newDesc,
-                due_date: newDate ? newDate : null // Tarix boşdursa null göndər
+                description: newDesc, 
+                due_date: newDate ? newDate : null 
             })
         });
 
         if (res.ok) {
-            loadTasks();
+            loadTasks(); // Siyahını yenilə
         } else {
-            alert("Yadda saxlamaq olmadı! (Server xətası)");
+            alert("Xəta baş verdi");
         }
     };
 
