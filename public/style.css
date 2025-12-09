@@ -2,10 +2,10 @@
    ÜMUMİ SİTİL (Sarı & Qara Mövzu)
    ========================================= */
 :root {
-    --primary-color: #ffcc00; /* Sənin Sarı Rəngin */
+    --primary-color: #ffcc00; /* Sarı */
     --primary-hover: #e6b800;
-    --bg-dark: #121212;       /* Tünd Qara Fon */
-    --bg-card: #1e1e1e;       /* Kart Fonu */
+    --bg-dark: #121212;       /* Tünd Qara */
+    --bg-card: #1e1e1e;       /* Kart Rəngi */
     --text-light: #ffffff;
     --text-grey: #b3b3b3;
     --danger: #ff4d4d;
@@ -34,149 +34,149 @@ body {
 .container {
     background-color: var(--bg-card);
     width: 100%;
-    max-width: 500px; /* Kompüterdə səliqəli dursun */
+    max-width: 450px;
     padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(255, 204, 0, 0.1); /* Yüngül sarı kölgə */
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border: 1px solid #333;
+    position: relative;
 }
 
-header {
+/* Header Hissəsi (Başlıq və Çıxış) */
+.app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
-    border-bottom: 2px solid var(--primary-color); /* Başlığın altında sarı xətt */
+    border-bottom: 2px solid var(--primary-color);
     padding-bottom: 15px;
 }
 
-h1 {
-    font-size: 1.8rem;
-    color: var(--primary-color); /* Başlıq Sarı olsun */
+.main-title {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0;
 }
 
-.user-info span {
-    color: var(--text-grey);
-    font-size: 0.9rem;
-    margin-right: 10px;
-}
-
-/* =========================================
-   FORM HİSSƏSİ (Task Yazma)
-   ========================================= */
-#task-form {
+.user-info {
     display: flex;
+    align-items: center;
     gap: 10px;
-    background: #252525;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap; /* Telefonda aşağı düşsün */
 }
 
-input, select {
-    padding: 12px;
-    background-color: #333;
-    border: 1px solid #444;
+#welcome-message {
+    font-size: 0.85rem;
+    color: var(--text-grey);
+}
+
+#logout-btn {
+    background: #333;
     color: white;
-    border-radius: 6px;
-    font-size: 1rem;
-    outline: none;
-}
-
-input:focus, select:focus {
-    border-color: var(--primary-color); /* Yazanda kənarı sarı olsun */
-}
-
-/* Task yazılan yer geniş olsun */
-#task-input {
-    flex: 2; 
-    min-width: 150px;
-}
-
-/* Kateqoriya seçimi */
-#task-category {
-    flex: 1;
-}
-
-/* =========================================
-   DÜYMƏLƏR (Sarı Buttonlar)
-   ========================================= */
-button {
-    padding: 12px 20px;
     border: none;
+    padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
     transition: 0.3s;
 }
 
-/* Əsas Sarı Düymə (Əlavə et) */
-button[type="submit"] {
-    background-color: var(--primary-color);
-    color: #000; /* Yazısı qara olsun oxunsun */
-}
-
-button[type="submit"]:hover {
-    background-color: var(--primary-hover);
-    transform: scale(1.05);
-}
-
-/* Qırmızı Düymələr (Silmək, Çıxış) */
-.delete-btn {
-    background-color: transparent;
-    color: var(--danger);
-    border: 1px solid var(--danger);
-}
-
-.delete-btn:hover {
-    background-color: var(--danger);
-    color: white;
+#logout-btn:hover {
+    background: var(--danger);
 }
 
 /* =========================================
-   TAPŞIRIQ SİYAHISI (Kartlar)
+   FORM HİSSƏSİ
+   ========================================= */
+#task-form {
+    display: flex;
+    gap: 8px;
+    background: #252525;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+input, select, textarea {
+    background-color: #333;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color);
+}
+
+#task-input { flex: 2; min-width: 120px; }
+#task-category { flex: 1; }
+
+button {
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+/* Əsas Sarı Düymə (+) */
+#task-form button {
+    background-color: var(--primary-color);
+    color: #000;
+    padding: 10px 15px;
+    font-size: 1.2rem;
+}
+
+#task-form button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* =========================================
+   TAPŞIRIQ SİYAHISI
    ========================================= */
 ul {
     list-style: none;
+    padding: 0;
 }
 
 li {
     background-color: #2a2a2a;
     padding: 15px;
     margin-bottom: 12px;
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 4px solid var(--primary-color); /* Sol tərəfdə sarı zolaq */
-    transition: 0.3s;
+    border-left: 4px solid var(--primary-color);
+    transition: transform 0.2s;
 }
 
 li:hover {
+    transform: translateY(-2px);
     background-color: #333;
 }
 
-li strong {
-    font-size: 1.1rem;
-    display: block;
-    color: white;
-}
-
 .badge {
-    font-size: 0.8rem;
-    padding: 3px 8px;
+    font-size: 0.75rem;
+    padding: 2px 8px;
     border-radius: 4px;
     background: #444;
-    color: #bbb;
-    margin-top: 5px;
-    display: inline-block;
+    color: #ccc;
+    margin-left: 10px;
+}
+
+/* Tamamlanmış Tapşırıq */
+li.completed {
+    opacity: 0.5;
+    text-decoration: line-through;
+    border-left-color: #444;
 }
 
 .actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .check-btn {
@@ -186,29 +186,99 @@ li strong {
     padding: 5px;
 }
 
+.delete-btn {
+    background: var(--danger);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
 /* =========================================
-   RESPONSIVE (Mobil Uyğunlaşma) 📱
+   MODAL (Açılan Pəncərə - Ən Vacib Hissə)
+   ========================================= */
+.modal-overlay {
+    display: none; /* Varsayılan olaraq GİZLİDİR */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); /* Arxa fonu qaralt */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* JS ilə 'active' klası veriləndə görünəcək */
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+}
+
+.modal-content h2 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-content label {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: -10px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#save-task-btn {
+    flex: 1;
+    background: var(--primary-color);
+    color: black;
+    padding: 10px;
+}
+
+#cancel-edit-btn {
+    flex: 1;
+    background: #444;
+    color: white;
+    padding: 10px;
+}
+
+/* =========================================
+   RESPONSIVE (Mobil)
    ========================================= */
 @media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-    
     .container {
         padding: 1.5rem;
     }
-
-    /* Form elementləri alt-alta düzülsün */
+    
     #task-form {
         flex-direction: column;
     }
-
-    #task-input, #task-category, button[type="submit"] {
+    
+    #task-input, #task-category, #task-form button {
         width: 100%;
-        flex: none;
     }
 
-    /* Task siyahısında düymələr səliqəli dursun */
     li {
         flex-direction: column;
         align-items: flex-start;
@@ -217,6 +287,6 @@ li strong {
 
     .actions {
         width: 100%;
-        justify-content: flex-end; /* Sağ tərəfə çəkilsin */
+        justify-content: flex-end;
     }
 }
