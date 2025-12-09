@@ -2,27 +2,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
-    // Salamlama
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         document.getElementById("welcome-message").textContent = `Xoş gəldin, ${payload.username}`;
     } catch(e) {}
 
-    // Çıxış
     document.getElementById("logout-btn").addEventListener("click", () => {
         localStorage.clear(); window.location.href = "login.html";
     });
 
     await loadTasks();
 
-    // YENİ TAPŞIRIQ (Qeyd və Tarix ilə)
+    // --- YENİ TAPŞIRIQ ƏLAVƏ ETMƏK ---
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         
+        // Xanadakı məlumatları götürürük
         const title = document.getElementById("task-input").value;
         const category = document.getElementById("task-category").value;
-        const description = document.getElementById("task-desc").value; // Yeni
-        const date = document.getElementById("task-date").value;       // Yeni
+        const description = document.getElementById("task-desc").value; // Yeni Qeyd
+        const date = document.getElementById("task-date").value;       // Yeni Tarix
 
         const res = await fetch("/api/tasks", {
             method: "POST",
@@ -33,10 +32,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (res.ok) {
             document.getElementById("task-form").reset(); // Formu təmizlə
             loadTasks();
+        } else {
+            alert("Xəta baş verdi!");
         }
     });
 
-    // TAPŞIRIQLARI YÜKLƏ
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const li = document.createElement("li");
             if (task.status === 'completed') li.classList.add('completed');
 
-            // Tarixi formatla
+            // Tarix formatı
             let dateDisplay = "";
             if (task.due_date) {
                 dateDisplay = `<i class="far fa-calendar-alt"></i> ${task.due_date}`;
@@ -68,10 +68,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                 </div>
                 <div class="actions">
-                    <button onclick="toggleStatus(${task.id}, '${task.status}')" class="check-btn" title="Statusu dəyiş">
+                    <button onclick="toggleStatus(${task.id}, '${task.status}')" class="check-btn">
                         <i class="fas ${task.status === 'completed' ? 'fa-check-circle' : 'fa-circle'}"></i>
                     </button>
-                    <button onclick="deleteTask(${task.id})" class="delete-btn" title="Sil">
+                    <button onclick="deleteTask(${task.id})" class="delete-btn">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>

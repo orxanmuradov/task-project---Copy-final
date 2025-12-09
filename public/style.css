@@ -1,303 +1,3 @@
- /* =========================================
-   ÜMUMİ SİTİL (Sarı & Qara Mövzu)
-   ========================================= */
-:root {
-    --primary-color: #ffcc00; /* Sarı */
-    --primary-hover: #e6b800;
-    --bg-dark: #121212;       /* Tünd Qara */
-    --bg-card: #1e1e1e;       /* Kart Rəngi */
-    --text-light: #ffffff;
-    --text-grey: #b3b3b3;
-    --danger: #ff4d4d;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', sans-serif;
-}
-
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-}
-
-/* =========================================
-   CONTAINER (Əsas Qutu)
-   ========================================= */
-.container {
-    background-color: var(--bg-card);
-    width: 100%;
-    max-width: 450px;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border: 1px solid #333;
-    position: relative;
-}
-
-/* Header Hissəsi (Başlıq və Çıxış) */
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 15px;
-}
-
-.main-title {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin: 0;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#welcome-message {
-    font-size: 0.85rem;
-    color: var(--text-grey);
-}
-
-#logout-btn {
-    background: #333;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-#logout-btn:hover {
-    background: var(--danger);
-}
-
-/* =========================================
-   FORM HİSSƏSİ
-   ========================================= */
-#task-form {
-    display: flex;
-    gap: 8px;
-    background: #252525;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-input, select, textarea {
-    background-color: #333;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.95rem;
-    outline: none;
-}
-
-input:focus, select:focus, textarea:focus {
-    border-color: var(--primary-color);
-}
-
-#task-input { flex: 2; min-width: 120px; }
-#task-category { flex: 1; }
-
-button {
-    cursor: pointer;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    transition: 0.2s;
-}
-
-/* Əsas Sarı Düymə (+) */
-#task-form button {
-    background-color: var(--primary-color);
-    color: #000;
-    padding: 10px 15px;
-    font-size: 1.2rem;
-}
-
-#task-form button:hover {
-    background-color: var(--primary-hover);
-}
-
-/* =========================================
-   TAPŞIRIQ SİYAHISI
-   ========================================= */
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    background-color: #2a2a2a;
-    padding: 15px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-left: 4px solid var(--primary-color);
-    transition: transform 0.2s;
-}
-
-li:hover {
-    transform: translateY(-2px);
-    background-color: #333;
-}
-
-.badge {
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: #444;
-    color: #ccc;
-    margin-left: 10px;
-}
-
-/* Tamamlanmış Tapşırıq */
-li.completed {
-    opacity: 0.5;
-    text-decoration: line-through;
-    border-left-color: #444;
-}
-
-.actions {
-    display: flex;
-    gap: 8px;
-}
-
-.check-btn {
-    background: transparent;
-    color: var(--primary-color);
-    font-size: 1.2rem;
-    padding: 5px;
-}
-
-.delete-btn {
-    background: var(--danger);
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-}
-
-/* =========================================
-   MODAL (Açılan Pəncərə - Ən Vacib Hissə)
-   ========================================= */
-.modal-overlay {
-    display: none; /* Varsayılan olaraq GİZLİDİR */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8); /* Arxa fonu qaralt */
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-
-/* JS ilə 'active' klası veriləndə görünəcək */
-.modal-overlay.active {
-    display: flex;
-}
-
-.modal-content {
-    background: var(--bg-card);
-    padding: 2rem;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    border: 1px solid var(--primary-color);
-    box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
-}
-
-.modal-content h2 {
-    color: var(--primary-color);
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.modal-content form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.modal-content label {
-    font-size: 0.9rem;
-    color: #ccc;
-    margin-bottom: -10px;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-#save-task-btn {
-    flex: 1;
-    background: var(--primary-color);
-    color: black;
-    padding: 10px;
-}
-
-#cancel-edit-btn {
-    flex: 1;
-    background: #444;
-    color: white;
-    padding: 10px;
-}
-
-/* =========================================
-   RESPONSIVE (Mobil)
-   ========================================= */
-@media (max-width: 600px) {
-    .container {
-        padding: 1.5rem;
-    }
-    
-    #task-form {
-        flex-direction: column;
-    }
-    
-    #task-input, #task-category, #task-form button {
-        width: 100%;
-    }
-
-    li {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
-
-
-
-
-
-
-
-
 /* =========================================
    ÜMUMİ SİTİL (Sarı & Qara)
    ========================================= */
@@ -309,7 +9,7 @@ li.completed {
     --text-light: #ffffff;
     --text-grey: #b3b3b3;
     --danger: #ff4d4d;
-    --success: #00e676; /* İcra olundu rəngi */
+    --success: #00e676;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
@@ -340,14 +40,13 @@ body {
     margin-bottom: 20px; border-bottom: 2px solid var(--primary-color);
     padding-bottom: 15px;
 }
-.main-title { font-size: 1.5rem; color: var(--primary-color); }
+.main-title { font-size: 1.5rem; color: var(--primary-color); margin:0; }
 .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-grey); }
 
-/* Logout Button */
 #logout-btn { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
 #logout-btn:hover { background: var(--danger); }
 
-/* FORM (Yeni Dizayn) */
+/* --- YENİ FORM DİZAYNI --- */
 #task-form {
     background: #252525; padding: 15px; border-radius: 12px; margin-bottom: 20px;
     display: flex; flex-direction: column; gap: 10px;
@@ -363,32 +62,32 @@ input, select {
 }
 input:focus, select:focus { border-color: var(--primary-color); }
 
-/* Button */
+/* Düymə */
 button[type="submit"] {
     background-color: var(--primary-color); color: #000; border: none;
     padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;
+    min-width: 50px;
 }
 button[type="submit"]:hover { background-color: var(--primary-hover); }
 
-/* LIST */
-ul { list-style: none; }
+/* --- SİYAHI --- */
+ul { list-style: none; padding: 0; }
 
 li {
     background-color: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 10px;
     display: flex; justify-content: space-between; align-items: center;
     border-left: 4px solid var(--primary-color); transition: 0.2s;
 }
-
 li:hover { background-color: #333; }
 
+.task-info { flex: 1; }
 .task-info strong { display: block; font-size: 1.1rem; color: white; }
-.task-desc { font-size: 0.85rem; color: #888; margin-top: 2px; }
-.task-meta { font-size: 0.75rem; color: var(--text-grey); margin-top: 5px; display: flex; gap: 10px; align-items: center; }
+.task-desc { font-size: 0.85rem; color: #aaa; margin-top: 4px; font-style: italic; }
+.task-meta { font-size: 0.75rem; color: var(--text-grey); margin-top: 6px; display: flex; gap: 10px; align-items: center; }
 
 .badge { padding: 2px 6px; border-radius: 4px; background: #444; color: #ccc; }
 
-/* ACTIONS */
-.actions { display: flex; gap: 8px; }
+.actions { display: flex; gap: 8px; margin-left: 10px; }
 
 .check-btn {
     background: transparent; border: none; cursor: pointer; font-size: 1.4rem;
