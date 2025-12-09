@@ -1,119 +1,189 @@
  /* =========================================
-   ÜMUMİ SİTİL (Reset & Body)
+   ÜMUMİ SİTİL (Sarı & Qara Mövzu)
    ========================================= */
+:root {
+    --primary-color: #ffcc00; /* Sənin Sarı Rəngin */
+    --primary-hover: #e6b800;
+    --bg-dark: #121212;       /* Tünd Qara Fon */
+    --bg-card: #1e1e1e;       /* Kart Fonu */
+    --text-light: #ffffff;
+    --text-grey: #b3b3b3;
+    --danger: #ff4d4d;
+}
+
 * {
-    box-sizing: border-box; /* Elementlərin ölçüsü daşmasın */
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 body {
-    background-color: #1a1a1a; /* Tünd fon */
-    color: #e0e0e0; /* Açıq yazı */
+    background-color: var(--bg-dark);
+    color: var(--text-light);
     display: flex;
-    justify-content: center; /* Mərkəzə gətir */
+    justify-content: center;
     align-items: center;
-    min-height: 100vh; /* Ekran boyu */
-    padding: 20px; /* Telefonda kənarlardan boşluq qalsın */
+    min-height: 100vh;
+    padding: 20px;
 }
 
 /* =========================================
    CONTAINER (Əsas Qutu)
    ========================================= */
 .container {
-    background-color: #2d2d2d;
+    background-color: var(--bg-card);
+    width: 100%;
+    max-width: 500px; /* Kompüterdə səliqəli dursun */
     padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    width: 100%;
-    max-width: 400px; /* Kompüterdə çox genəlməsin */
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.1); /* Yüngül sarı kölgə */
+    border: 1px solid #333;
 }
 
-h1, h2 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #ffffff;
-}
-
-/* =========================================
-   FORMLAR VƏ INPUTLAR
-   ========================================= */
-form {
+header {
     display: flex;
-    flex-direction: column;
-    gap: 15px; /* Elementlər arası məsafə */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--primary-color); /* Başlığın altında sarı xətt */
+    padding-bottom: 15px;
 }
 
-label {
+h1 {
+    font-size: 1.8rem;
+    color: var(--primary-color); /* Başlıq Sarı olsun */
+}
+
+.user-info span {
+    color: var(--text-grey);
     font-size: 0.9rem;
-    font-weight: bold;
-    color: #b0b0b0;
-}
-
-input, select, textarea {
-    width: 100%; /* Telefonda tam ekran tutsun */
-    padding: 12px;
-    border: 1px solid #444;
-    border-radius: 6px;
-    background-color: #333;
-    color: white;
-    font-size: 1rem; /* Telefonda rahat yazılsın */
-}
-
-input:focus {
-    outline: none;
-    border-color: #0070f3; /* Fokuslananda göy olsun */
+    margin-right: 10px;
 }
 
 /* =========================================
-   DÜYMƏLƏR (Buttons)
+   FORM HİSSƏSİ (Task Yazma)
    ========================================= */
-button {
-    width: 100%;
+#task-form {
+    display: flex;
+    gap: 10px;
+    background: #252525;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Telefonda aşağı düşsün */
+}
+
+input, select {
     padding: 12px;
-    background-color: #0070f3; /* Vercel mavisi */
+    background-color: #333;
+    border: 1px solid #444;
     color: white;
-    border: none;
     border-radius: 6px;
     font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.3s;
-    font-weight: bold;
+    outline: none;
 }
 
-button:hover {
-    background-color: #005bb5;
+input:focus, select:focus {
+    border-color: var(--primary-color); /* Yazanda kənarı sarı olsun */
 }
 
-/* Qırmızı düymələr (Silmək, Çıxış üçün) */
-button.delete-btn, button.logout-btn {
-    background-color: #e00;
-    margin-top: 10px;
+/* Task yazılan yer geniş olsun */
+#task-input {
+    flex: 2; 
+    min-width: 150px;
+}
+
+/* Kateqoriya seçimi */
+#task-category {
+    flex: 1;
 }
 
 /* =========================================
-   TAPŞIRIQLAR SİYAHISI (Tasks)
+   DÜYMƏLƏR (Sarı Buttonlar)
+   ========================================= */
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+/* Əsas Sarı Düymə (Əlavə et) */
+button[type="submit"] {
+    background-color: var(--primary-color);
+    color: #000; /* Yazısı qara olsun oxunsun */
+}
+
+button[type="submit"]:hover {
+    background-color: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+/* Qırmızı Düymələr (Silmək, Çıxış) */
+.delete-btn {
+    background-color: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.delete-btn:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
+/* =========================================
+   TAPŞIRIQ SİYAHISI (Kartlar)
    ========================================= */
 ul {
     list-style: none;
-    margin-top: 20px;
 }
 
 li {
-    background-color: #383838;
+    background-color: #2a2a2a;
     padding: 15px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap; /* Telefonda sığmasa aşağı düşsün */
+    border-left: 4px solid var(--primary-color); /* Sol tərəfdə sarı zolaq */
+    transition: 0.3s;
+}
+
+li:hover {
+    background-color: #333;
+}
+
+li strong {
+    font-size: 1.1rem;
+    display: block;
+    color: white;
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #444;
+    color: #bbb;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.actions {
+    display: flex;
     gap: 10px;
 }
 
-li span {
-    flex: 1; /* Yazı boş yeri tutsun */
+.check-btn {
+    background: transparent;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    padding: 5px;
 }
 
 /* =========================================
@@ -121,18 +191,32 @@ li span {
    ========================================= */
 @media (max-width: 600px) {
     body {
-        padding: 10px; /* Telefonda kənarları daralt */
+        padding: 10px;
     }
-
+    
     .container {
-        padding: 1.5rem; /* Daxili boşluğu azalt */
+        padding: 1.5rem;
     }
 
-    h1 {
-        font-size: 1.5rem; /* Başlığı kiçilt */
+    /* Form elementləri alt-alta düzülsün */
+    #task-form {
+        flex-direction: column;
     }
 
-    input, button {
-        padding: 14px; /* Telefonda barmaqla basmaq rahat olsun */
+    #task-input, #task-category, button[type="submit"] {
+        width: 100%;
+        flex: none;
+    }
+
+    /* Task siyahısında düymələr səliqəli dursun */
+    li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .actions {
+        width: 100%;
+        justify-content: flex-end; /* Sağ tərəfə çəkilsin */
     }
 }
