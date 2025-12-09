@@ -1,5 +1,5 @@
- // =========================================================
-// 1. DATABASE LİNKİ (Sənin Pooled Linkin - Hazırdır)
+// =========================================================
+// 1. DATABASE LİNKİ
 // =========================================================
 process.env.POSTGRES_URL = "postgresql://neondb_owner:npg_Auyr0o2pfaDC@ep-gentle-leaf-adm3ylo1-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require";
 
@@ -15,49 +15,30 @@ const path = require("path");
 
 const app = express();
 const port = 3000;
-const JWT_SECRET = "gizli_acar_123"; // İstədiyin bir şifrə
+const JWT_SECRET = "gizli_acar_123";
 
 app.use(cors());
 app.use(express.json());
 
 // =========================================================
-// 3. STATİK FAYLLAR (Dizaynın Görünməsi Üçün)
+// 3. STATİK FAYLLAR
 // =========================================================
-// Serverə deyirik: "Bütün CSS, JS, HTML fayllarını 'public' qovluğundan götür"
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Səhifələri yönləndiririk
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 // =========================================================
-// 4. DATABASE (Cədvəllərin Yaradılması)
+// 4. DATABASE BAŞLANĞICI
 // =========================================================
 async function initDB() {
   try {
-    // İstifadəçi cədvəli
-    await sql`CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'user'
-    );`;
-    // Tapşırıq cədvəli
-    await sql`CREATE TABLE IF NOT EXISTS tasks (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        title TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        category TEXT NOT NULL DEFAULT 'general',
-        description TEXT,
-        due_date TEXT
-    );`;
-    console.log("✅ Postgres bazası hazırdır.");
-  } catch (err) {
-    console.error("❌ Baza Xətası:", err.message);
-  }
+    await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user');`;
+    await sql`CREATE TABLE IF NOT EXISTS tasks (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', category TEXT NOT NULL DEFAULT 'general', description TEXT, due_date TEXT);`;
+    console.log("✅ Server və Baza Hazırdır!");
+  } catch (err) { console.error("❌ Baza Xətası:", err.message); }
 }
 initDB();
 
@@ -84,27 +65,20 @@ app.post("/api/users/login", async (req, res) => {
   try {
     const result = await sql`SELECT * FROM users WHERE username = ${username}`;
     const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(400).json({ error: "Səhv məlumat." });
-    }
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) return res.status(400).json({ error: "Səhv məlumat." });
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ message: "Giriş uğurlu", token: token, role: user.role });
+    res.json({ message: "Giriş uğurlu", token, role: user.role });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Middleware
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
+  const t = req.headers['authorization']?.split(' ')[1];
+  if (!t) return res.sendStatus(401);
+  jwt.verify(t, JWT_SECRET, (err, u) => { if(err) return res.sendStatus(403); req.user = u; next(); });
 }
 
-// Tasks
+// User Tasks
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   try {
     const result = await sql`SELECT * FROM tasks WHERE user_id = ${req.user.id} ORDER BY id DESC`;
@@ -143,7 +117,23 @@ app.delete("/api/admin/users/:id", [authenticateToken, authenticateAdmin], async
   res.json({ message: "Silindi" });
 });
 
-// Serveri Başlat
+// 👇👇👇 YENİ ƏLAVƏ EDİLƏN HİSSƏ (Bunu unutmuşdum) 👇👇👇
+app.get("/api/admin/tasks", [authenticateToken, authenticateAdmin], async (req, res) => {
+  try {
+    // Tapşırıqları və onları yaradan istifadəçinin adını birləşdirib gətiririk
+    const result = await sql`
+      SELECT tasks.*, users.username 
+      FROM tasks 
+      JOIN users ON tasks.user_id = users.id 
+      ORDER BY tasks.id DESC
+    `;
+    res.json({ tasks: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// 👆👆👆 ------------------------------------------ 👆👆👆
+
 app.listen(port, () => {
   console.log(`🚀 Server işləyir: http://localhost:${port}`);
 });
