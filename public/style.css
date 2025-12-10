@@ -394,3 +394,42 @@ li.completed .check-btn { color: var(--success); }
         margin-left: 10px; /* Alt tapşırıq çox sağa getməsin */
     }
 }
+
+
+/* ==================================================
+   🔴 RƏNG XƏTASINI DÜZƏLDƏN KOD (Fix Colors)
+   ================================================== */
+
+/* Bütün yazı yazılan yerləri (Input, Textarea, Select) məcbur düzəlt */
+input, textarea, select, .edit-textarea {
+    background-color: #252525 !important; /* Fon mütləq tünd olsun */
+    color: #ffffff !important;           /* Yazı mütləq ağ olsun */
+    border: 1px solid #555 !important;   /* Çərçivə boz */
+    caret-color: var(--primary-color);   /* Yazı kursoru sarı olsun */
+}
+
+/* Üzərinə basanda (Aktiv olanda) */
+input:focus, textarea:focus, select:focus {
+    background-color: #1a1a1a !important; /* Daha tünd */
+    border-color: var(--primary-color) !important; /* Sarı çərçivə */
+    outline: none;
+}
+
+/* İpucu yazısı (Placeholder) görünmürsə, onu da rənglə */
+::placeholder {
+    color: #888 !important; /* Boz rəngdə olsun ki, görünsün */
+    opacity: 1;
+}
+
+/* Tarix (Date) seçən yerin içi də qara olsun */
+input[type="date"] {
+    color-scheme: dark; /* Təqvimi qara rejimdə açar */
+}
+
+/* Alt tapşırıq qeyd yeri xüsusi qoruma */
+.edit-textarea {
+    min-height: 80px;
+    padding: 10px;
+    font-size: 1rem;
+    line-height: 1.5;
+}
