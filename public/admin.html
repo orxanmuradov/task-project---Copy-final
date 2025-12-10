@@ -7,53 +7,57 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        body { padding: 20px; color: white; background: #121212; display: block; } /* Display block vacibdir */
-        .admin-container { max-width: 900px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        body { padding: 20px; color: white; background: #121212; display: block; }
+        .admin-container { max-width: 800px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
         h1, h2 { color: #ffcc00; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th, td { border: 1px solid #444; padding: 12px; text-align: left; }
         th { background: #333; color: #ffcc00; }
-        .btn-delete { background: #ff4d4d; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
         
-        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .cleanup-btn { background: #ff4d4d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .cleanup-btn:hover { background: #cc0000; }
-        .back-btn { background: #333; color: white; padding: 10px 20px; border: 1px solid #555; border-radius: 5px; text-decoration: none; display: inline-block; }
+        /* Düymələr */
+        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-delete { background: #ff4d4d; color: white; }
+        .btn-delete:hover { background: #cc0000; }
+        
+        .btn-make-admin { background: #00e676; color: black; } /* Yaşıl */
+        .btn-make-user { background: orange; color: black; }    /* Narıncı */
+
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { background: #333; color: white; padding: 10px 20px; border: 1px solid #555; border-radius: 5px; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <div class="header-actions">
             <h1>🛡️ Admin İdarəetmə</h1>
-            <div style="display:flex; gap:10px;">
-                <button onclick="cleanupTasks()" class="cleanup-btn"><i class="fas fa-trash-alt"></i> Bitmişləri Təmizlə</button>
+            <div>
                 <a href="/" class="back-btn">Ana Səhifə</a>
                 <button id="logout-btn" class="back-btn" style="border-color:red; color:red;">Çıxış</button>
             </div>
         </div>
 
-        <h2>👥 İstifadəçilər</h2>
+        <h2>👥 İstifadəçilər və Rollar</h2>
         <div style="overflow-x:auto;">
             <table>
-                <thead><tr><th>ID</th><th>Ad</th><th>Rol</th><th>Əməliyyat</th></tr></thead>
-                <tbody id="users-table-body"></tbody>
-            </table>
-        </div>
-
-        <h2 style="margin-top: 30px;">📋 Bütün Tapşırıqlar</h2>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead><tr><th>ID</th><th>Tapşırıq</th><th>Status</th><th>İstifadəçi</th></tr></thead>
-                <tbody id="tasks-table-body"></tbody>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ad</th>
+                        <th>Hazırkı Rol</th>
+                        <th>Əməliyyatlar</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    </tbody>
             </table>
         </div>
     </div>
 
     <script>
         const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role"); // Rolu yoxlayırıq
+        const role = localStorage.getItem("role");
 
-        // Əgər token yoxdursa VƏ YA rol admin deyilsə -> Ana səhifəyə at
+        // Admin yoxlanışı
         if (!token || role !== "admin") {
             alert("Siz Admin deyilsiniz!");
             window.location.href = "/";
@@ -64,51 +68,69 @@
             window.location.href = "/login";
         });
 
-        async function loadData() {
+        async function loadUsers() {
             try {
-                // İstifadəçilər
-                const resU = await fetch("/api/admin/users", { headers: { "Authorization": `Bearer ${token}` } });
-                if(!resU.ok) throw new Error("İcazə yoxdur");
-                const dataU = await resU.json();
-                document.getElementById("users-table-body").innerHTML = dataU.users.map(u => `
-                    <tr>
-                        <td>${u.id}</td>
-                        <td>${u.username}</td>
-                        <td>${u.role}</td>
-                        <td><button onclick="deleteUser(${u.id})" class="btn-delete">Sil</button></td>
-                    </tr>
-                `).join('');
+                const res = await fetch("/api/admin/users", { headers: { "Authorization": `Bearer ${token}` } });
+                if(!res.ok) throw new Error("İcazə yoxdur");
+                
+                const data = await res.json();
+                const tbody = document.getElementById("users-table-body");
+                tbody.innerHTML = "";
 
-                // Tapşırıqlar
-                const resT = await fetch("/api/admin/tasks", { headers: { "Authorization": `Bearer ${token}` } });
-                const dataT = await resT.json();
-                document.getElementById("tasks-table-body").innerHTML = dataT.tasks.map(t => `
-                    <tr>
-                        <td>${t.id}</td>
-                        <td>${t.title}</td>
-                        <td>${t.status}</td>
-                        <td>${t.username}</td>
-                    </tr>
-                `).join('');
+                data.users.forEach(u => {
+                    // Rol dəyişmə düyməsini təyin edək
+                    let roleBtn = "";
+                    if (u.role === 'user') {
+                        roleBtn = `<button onclick="changeRole(${u.id}, 'admin')" class="btn-action btn-make-admin">⬆️ Admin Et</button>`;
+                    } else {
+                        roleBtn = `<button onclick="changeRole(${u.id}, 'user')" class="btn-action btn-make-user">⬇️ User Et</button>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td>${u.username}</td>
+                            <td><span style="font-weight:bold; color:${u.role==='admin'?'#ffcc00':'#ccc'}">${u.role.toUpperCase()}</span></td>
+                            <td>
+                                ${roleBtn}
+                                <button onclick="deleteUser(${u.id})" class="btn-action btn-delete">Sil</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
             } catch (error) {
                 console.error(error);
-                alert("Məlumatları yükləmək olmadı. Yenidən giriş edin.");
+                alert("Məlumat yüklənmədi.");
             }
         }
 
+        // --- ROL DƏYİŞDİRMƏK ---
+        window.changeRole = async (id, newRole) => {
+            if(!confirm(`Bu istifadəçini '${newRole.toUpperCase()}' etmək istəyirsən?`)) return;
+
+            const res = await fetch(`/api/admin/users/${id}/role`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ role: newRole })
+            });
+
+            if(res.ok) {
+                alert("Rol dəyişdirildi!");
+                loadUsers(); // Cədvəli yenilə
+            } else {
+                alert("Xəta baş verdi");
+            }
+        };
+
+        // --- İSTİFADƏÇİ SİLMƏK ---
         window.deleteUser = async (id) => {
-            if(!confirm("İstifadəçini silmək istəyirsən?")) return;
-            await fetch(`/api/admin/users/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
-            loadData();
+            if(!confirm("İstifadəçini həmişəlik silmək istəyirsən?")) return;
+            const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+            if(res.ok) loadUsers();
         };
 
-        window.cleanupTasks = async () => {
-            if(!confirm("DİQQƏT: Bütün istifadəçilərin 'Completed' (Bitmiş) tapşırıqları silinəcək! Əminsən?")) return;
-            const res = await fetch("/api/admin/cleanup", { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
-            if(res.ok) { alert("Baza təmizləndi!"); loadData(); } else { alert("Xəta baş verdi."); }
-        };
-
-        loadData();
+        loadUsers();
     </script>
 </body>
 </html>

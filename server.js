@@ -116,16 +116,15 @@ app.delete("/api/notes/:id", authenticateToken, async (req, res) => {
 // --- ADMIN API ---
 function authenticateAdmin(req, res, next) { if (req.user.role !== 'admin') return res.status(403).json({ error: "İcazəniz yoxdur" }); next(); }
 
-app.get("/api/admin/users", [authenticateToken, authenticateAdmin], async (req, res) => { const r = await sql`SELECT id, username, role FROM users`; res.json({ users: r.rows }); });
+app.get("/api/admin/users", [authenticateToken, authenticateAdmin], async (req, res) => { const r = await sql`SELECT id, username, role FROM users ORDER BY id ASC`; res.json({ users: r.rows }); });
 app.delete("/api/admin/users/:id", [authenticateToken, authenticateAdmin], async (req, res) => { await sql`DELETE FROM users WHERE id=${req.params.id}`; res.json({ message: "Silindi" }); });
-app.get("/api/admin/tasks", [authenticateToken, authenticateAdmin], async (req, res) => { const r = await sql`SELECT tasks.*, users.username FROM tasks JOIN users ON tasks.user_id = users.id ORDER BY tasks.id DESC`; res.json({ tasks: r.rows }); });
 
-// 👇 YENİ: ADMİN TƏMİZLİK (Cleanup) 👇
-app.delete("/api/admin/cleanup", [authenticateToken, authenticateAdmin], async (req, res) => {
+// 👇 YENİ: ROL DƏYİŞDİRMƏ API-si 👇
+app.put("/api/admin/users/:id/role", [authenticateToken, authenticateAdmin], async (req, res) => {
+    const { role } = req.body; // 'admin' və ya 'user' gələcək
     try {
-        // Bütün tamamlanmış (completed) tapşırıqları sil
-        const result = await sql`DELETE FROM tasks WHERE status = 'completed'`;
-        res.json({ message: "Bütün bitmiş tapşırıqlar silindi!" });
+        await sql`UPDATE users SET role=${role} WHERE id=${req.params.id}`;
+        res.json({ message: "Rol yeniləndi" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
