@@ -550,3 +550,88 @@ input[type="date"] {
     width: 100%;
     margin-top: 5px;
 }
+
+
+
+/* ... Yuxarıdakı kodlar qalır ... */
+
+/* --- CHECKLIST İTEMLƏRİ (Təkmilləşdirilmiş) --- */
+.checklist-item-wrapper {
+    background: #1a1a1a;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+/* Bitmiş hədəf (Solğunlaşsın) */
+.checklist-item-wrapper.done {
+    opacity: 0.6;
+    border-color: var(--success);
+}
+.checklist-item-wrapper.done .checklist-main-row span {
+    text-decoration: line-through;
+    color: #777;
+}
+
+/* Üst Hissə (Checkbox, Ad, Sil) */
+.checklist-main-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.delete-sub-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+.delete-sub-btn:hover { color: var(--danger); }
+
+/* Alt Hissə (Tarix və Qeyd Xanaları) */
+.checklist-details-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* Kiçik Tarix Xanası */
+.cl-date {
+    background: #252525;
+    border: 1px solid #444;
+    color: #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    font-size: 0.8rem;
+    width: 110px; /* Sabit en */
+}
+
+/* Kiçik Qeyd Xanası */
+.cl-note {
+    background: #252525;
+    border: 1px solid #444;
+    color: #ccc;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 0.8rem;
+    flex: 1; /* Qalan yeri tutsun */
+}
+
+.cl-date:focus, .cl-note:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Mobil üçün */
+@media (max-width: 600px) {
+    .checklist-details-row {
+        flex-direction: column; /* Mobildə alt-alta olsun */
+    }
+    .cl-date { width: 100%; }
+}

@@ -27,7 +27,7 @@
         }
     };
 
-    // --- TASK MƏNTİQİ (Köhnə kodlar) ---
+    // --- TASK MƏNTİQİ (Köhnə - Dəyişməyib) ---
     const categorySelect = document.getElementById("task-category");
     const newCatContainer = document.getElementById("new-cat-container");
     const newCatInput = document.getElementById("new-cat-input");
@@ -70,7 +70,7 @@
         const parents = data.tasks.filter(t => !t.parent_id); const children = data.tasks.filter(t => t.parent_id);
         parents.forEach(p => { renderTask(p, list, false); children.filter(c => c.parent_id === p.id).forEach(c => renderTask(c, list, true)); });
     }
-    function renderTask(task, listElement, isChild) { /* ... Bayaqkı task render kodu ... */
+    function renderTask(task, listElement, isChild) {
         const li = document.createElement("li"); li.id = `task-${task.id}`; if(task.status==='completed') li.classList.add('completed'); if(isChild) li.classList.add('sub-task-item');
         let dateDisplay = task.due_date ? `<i class="far fa-calendar-alt"></i> ${task.due_date}` : "";
         let recurDisplay = task.recurrence ? `<span class="recurrence-tag"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
@@ -78,7 +78,6 @@
         li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title}</strong><div class="task-meta">${dateDisplay} ${recurDisplay}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
         listElement.appendChild(li);
     }
-    // ... Task helper funksiyaları (toggleStatus, deleteTask, editDescription və s. əvvəlki kimi qalır, yerə qənaət üçün qısa yazdım) ...
     window.toggleAccordion = (id) => document.getElementById(`task-${id}`).classList.toggle("active");
     window.deleteTask = async (id) => { if(confirm("Silmək?")) { await fetch(`/api/tasks/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadTasks(); } };
     window.toggleStatus = async (id,s,r,t,c) => { const ns=s==='completed'?'pending':'completed'; await fetch(`/api/tasks/${id}/status`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({status:ns})}); loadTasks(); };
@@ -91,15 +90,13 @@
 
 
     // ==========================================
-    // --- YENİ: NOTES & GOALS (QEYDLƏR) MƏNTİQİ ---
+    // --- NOTES & GOALS (HƏDƏFLƏR) MƏNTİQİ ---
     // ==========================================
     
     document.getElementById("note-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const title = document.getElementById("note-title").value;
         const type = document.getElementById("note-type").value;
-        
-        // Checklist üçün boş array, text üçün boş string
         const content = type === 'checklist' ? '[]' : '';
 
         const res = await fetch("/api/notes", {
@@ -107,10 +104,7 @@
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ title, type, content })
         });
-        if (res.ok) {
-            document.getElementById("note-title").value = "";
-            loadNotes();
-        }
+        if (res.ok) { document.getElementById("note-title").value = ""; loadNotes(); }
     });
 
     async function loadNotes() {
@@ -125,40 +119,42 @@
             const div = document.createElement("div");
             div.className = "note-card";
             
-            // --- HEADER ---
             let headerHtml = `
                 <div class="note-header">
                     <div>
                         <h3>${note.title}</h3>
-                        <span class="note-type-badge">${note.type === 'checklist' ? 'Hədəf / Checklist' : 'Qeyd'}</span>
+                        <span class="note-type-badge">${note.type === 'checklist' ? 'Hədəf' : 'Qeyd'}</span>
                     </div>
                     <button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button>
                 </div>
             `;
 
-            // --- CONTENT ---
             let contentHtml = "";
 
             if (note.type === 'text') {
-                // SADƏ MƏTN REJİMİ
-                contentHtml = `
-                    <textarea class="note-textarea" onblur="updateNoteText(${note.id}, this.value)">${note.content || ''}</textarea>
-                `;
+                contentHtml = `<textarea class="note-textarea" onblur="updateNoteText(${note.id}, this.value)">${note.content || ''}</textarea>`;
             } else {
-                // CHECKLIST REJİMİ
+                // CHECKLIST (YENİ SİSTEM: Tarix və Qeyd ilə)
                 const items = JSON.parse(note.content || '[]');
                 let itemsHtml = items.map((item, index) => `
-                    <div class="checklist-item ${item.done ? 'done' : ''}">
-                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistItem(${note.id}, ${index}, this.checked)">
-                        <span>${item.text}</span>
-                        <button onclick="removeChecklistItem(${note.id}, ${index})" style="margin-left:auto; background:none; border:none; color:#555; cursor:pointer;">&times;</button>
+                    <div class="checklist-item-wrapper ${item.done ? 'done' : ''}">
+                        <div class="checklist-main-row">
+                            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="updateChecklistItem(${note.id}, ${index}, 'done', this.checked)">
+                            <span style="flex:1;">${item.text}</span>
+                            <button onclick="removeChecklistItem(${note.id}, ${index})" class="delete-sub-btn">&times;</button>
+                        </div>
+                        
+                        <div class="checklist-details-row">
+                            <input type="date" class="cl-date" value="${item.date || ''}" onchange="updateChecklistItem(${note.id}, ${index}, 'date', this.value)" title="Hədəf tarixi">
+                            <input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note || ''}" onchange="updateChecklistItem(${note.id}, ${index}, 'note', this.value)">
+                        </div>
                     </div>
                 `).join('');
 
                 contentHtml = `
                     <div class="checklist-container">
                         ${itemsHtml}
-                        <input type="text" class="add-check-input" placeholder="+ Hədəf əlavə et (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id}, this.value); this.value='';}">
+                        <input type="text" class="add-check-input" placeholder="+ Yeni hədəf əlavə et (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id}, this.value); this.value='';}">
                     </div>
                 `;
             }
@@ -176,36 +172,35 @@
     };
 
     window.updateNoteText = async (id, newText) => {
-        await fetch(`/api/notes/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ content: newText })
-        });
+        await fetch(`/api/notes/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ content: newText }) });
     };
 
-    // Checklist funksiyaları
+    // CHECKLIST FUNKSİYALARI
     window.addChecklistItem = async (id, text) => {
         if(!text.trim()) return;
-        // İndiki halı gətir, əlavə et, yadda saxla (Sadələşdirilmiş yanaşma: Bazadan yenidən oxumaq əvəzinə DOM-dan oxuya da bilərik, amma serverdən gətirmək daha təmizdir)
         const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
         const note = data.notes.find(n => n.id === id);
         const items = JSON.parse(note.content || '[]');
-        items.push({ text: text, done: false });
+        
+        // YENİ: items arrayına note və date sahələri də əlavə edirik
+        items.push({ text: text, done: false, date: "", note: "" });
         
         await fetch(`/api/notes/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ content: JSON.stringify(items) }) });
         loadNotes();
     };
 
-    window.toggleChecklistItem = async (id, index, isDone) => {
+    // TƏK FUKNSİYA: Bütün dəyişiklikləri (done, date, note) idarə edir
+    window.updateChecklistItem = async (id, index, field, value) => {
         const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
         const note = data.notes.find(n => n.id === id);
         const items = JSON.parse(note.content || '[]');
-        items[index].done = isDone;
+        
+        items[index][field] = value; // Hansı sahə dəyişibsə onu yenilə
 
         await fetch(`/api/notes/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ content: JSON.stringify(items) }) });
-        loadNotes();
+        loadNotes(); // Yenilə ki, görünüş düzəlsin (məsələn done olanda)
     };
 
     window.removeChecklistItem = async (id, index) => {
@@ -213,7 +208,7 @@
         const data = await res.json();
         const note = data.notes.find(n => n.id === id);
         const items = JSON.parse(note.content || '[]');
-        items.splice(index, 1); // Siyahıdan sil
+        items.splice(index, 1);
 
         await fetch(`/api/notes/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ content: JSON.stringify(items) }) });
         loadNotes();
