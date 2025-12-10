@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
@@ -8,19 +8,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { padding: 20px; color: white; background: #121212; display: block; }
-        .admin-container { max-width: 800px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .admin-container { max-width: 900px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
         h1, h2 { color: #ffcc00; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #444; padding: 12px; text-align: left; }
         th { background: #333; color: #ffcc00; }
         
         /* Düymələr */
-        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
-        .btn-delete { background: #ff4d4d; color: white; }
+        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; font-size: 0.85rem; }
+        
+        .btn-delete { background: #ff4d4d; color: white; } /* Qırmızı */
         .btn-delete:hover { background: #cc0000; }
         
         .btn-make-admin { background: #00e676; color: black; } /* Yaşıl */
         .btn-make-user { background: orange; color: black; }    /* Narıncı */
+
+        .btn-reset { background: #ffcc00; color: black; } /* Sarı */
+        .btn-reset:hover { background: #e6b800; }
 
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .back-btn { background: #333; color: white; padding: 10px 20px; border: 1px solid #555; border-radius: 5px; text-decoration: none; }
@@ -36,14 +40,14 @@
             </div>
         </div>
 
-        <h2>👥 İstifadəçilər və Rollar</h2>
+        <h2>👥 İstifadəçilər</h2>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Ad</th>
-                        <th>Hazırkı Rol</th>
+                        <th>Rol</th>
                         <th>Əməliyyatlar</th>
                     </tr>
                 </thead>
@@ -57,7 +61,6 @@
         const token = localStorage.getItem("token");
         const role = localStorage.getItem("role");
 
-        // Admin yoxlanışı
         if (!token || role !== "admin") {
             alert("Siz Admin deyilsiniz!");
             window.location.href = "/";
@@ -78,12 +81,11 @@
                 tbody.innerHTML = "";
 
                 data.users.forEach(u => {
-                    // Rol dəyişmə düyməsini təyin edək
                     let roleBtn = "";
                     if (u.role === 'user') {
-                        roleBtn = `<button onclick="changeRole(${u.id}, 'admin')" class="btn-action btn-make-admin">⬆️ Admin Et</button>`;
+                        roleBtn = `<button onclick="changeRole(${u.id}, 'admin')" class="btn-action btn-make-admin" title="Admin et">⬆️ Admin</button>`;
                     } else {
-                        roleBtn = `<button onclick="changeRole(${u.id}, 'user')" class="btn-action btn-make-user">⬇️ User Et</button>`;
+                        roleBtn = `<button onclick="changeRole(${u.id}, 'user')" class="btn-action btn-make-user" title="User et">⬇️ User</button>`;
                     }
 
                     tbody.innerHTML += `
@@ -93,7 +95,8 @@
                             <td><span style="font-weight:bold; color:${u.role==='admin'?'#ffcc00':'#ccc'}">${u.role.toUpperCase()}</span></td>
                             <td>
                                 ${roleBtn}
-                                <button onclick="deleteUser(${u.id})" class="btn-action btn-delete">Sil</button>
+                                <button onclick="resetPassword(${u.id}, '${u.username}')" class="btn-action btn-reset" title="Şifrəni 12345 et">🔑 Reset</button>
+                                <button onclick="deleteUser(${u.id})" class="btn-action btn-delete" title="Sil">🗑️</button>
                             </td>
                         </tr>
                     `;
@@ -108,22 +111,31 @@
         // --- ROL DƏYİŞDİRMƏK ---
         window.changeRole = async (id, newRole) => {
             if(!confirm(`Bu istifadəçini '${newRole.toUpperCase()}' etmək istəyirsən?`)) return;
-
             const res = await fetch(`/api/admin/users/${id}/role`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify({ role: newRole })
             });
+            if(res.ok) { alert("Rol dəyişdirildi!"); loadUsers(); }
+        };
+
+        // --- ŞİFRƏ SIFIRLAMAQ (RESET) ---
+        window.resetPassword = async (id, name) => {
+            if(!confirm(`"${name}" adlı istifadəçinin şifrəsini '12345' olaraq sıfırlamaq istəyirsən?`)) return;
+            
+            const res = await fetch(`/api/admin/users/${id}/reset-password`, {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
 
             if(res.ok) {
-                alert("Rol dəyişdirildi!");
-                loadUsers(); // Cədvəli yenilə
+                alert(`Uğurlu! "${name}" istifadəçisinin yeni şifrəsi: 12345`);
             } else {
-                alert("Xəta baş verdi");
+                alert("Xəta baş verdi.");
             }
         };
 
-        // --- İSTİFADƏÇİ SİLMƏK ---
+        // --- SİLMƏK ---
         window.deleteUser = async (id) => {
             if(!confirm("İstifadəçini həmişəlik silmək istəyirsən?")) return;
             const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
