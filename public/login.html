@@ -3,26 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş - Tapşırıq Siyahısı</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="auth.style.css">
+    <title>Giriş - Tapşırıqlar</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Sadə giriş dizaynı */
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #121212; }
+        .login-container { background: #1e1e1e; padding: 2rem; border-radius: 12px; border: 1px solid #333; width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #ffcc00; margin-bottom: 20px; }
+        input { margin-bottom: 10px; background: #333; color: white; border: 1px solid #444; }
+        button { width: 100%; padding: 10px; background: #ffcc00; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; }
+        button:hover { background: #e6b800; }
+        .link { margin-top: 10px; display: block; color: #888; text-decoration: none; font-size: 0.9rem; }
+        .link:hover { color: white; }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <h2>Giriş</h2>
+    <div class="login-container">
+        <h2>Giriş Yap</h2>
         <form id="login-form">
-            <label for="username">İstifadəçi adı:</label>
-            <input type="text" id="username" required>
-            
-            <label for="password">Parol:</label>
-            <input type="password" id="password" required>
-            
-            <button type="submit">Daxil Ol</button>
+            <input type="text" id="username" placeholder="İstifadəçi adı" required>
+            <input type="password" id="password" placeholder="Şifrə" required>
+            <button type="submit">Daxil ol</button>
         </form>
-        <p id="error-message" class="error"></p>
-        <p class="switch-form">Hesabınız yoxdur? <a href="register.html">Qeydiyyatdan keçin</a></p>
+        <a href="register.html" class="link">Qeydiyyatdan keç</a>
     </div>
-    
-    <script src="login.js"></script>
+
+    <script>
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const res = await fetch("/api/users/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // --- ƏN VACİB HİSSƏ BURADIR ---
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("role", data.role); // ROLU YADDAŞA YAZIRIQ
+                    
+                    // Rola uyğun yönləndirmə
+                    if (data.role === 'admin') {
+                        window.location.href = "admin.html";
+                    } else {
+                        window.location.href = "index.html";
+                    }
+                } else {
+                    alert(data.error || "Giriş xətası");
+                }
+            } catch (err) {
+                alert("Server xətası!");
+                console.error(err);
+            }
+        });
+    </script>
 </body>
 </html>
