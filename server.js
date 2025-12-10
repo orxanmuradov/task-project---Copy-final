@@ -24,24 +24,19 @@ app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 // =========================================================
-// DATABASE BAŞLANĞICI (YENİ SÜTUNLAR ƏLAVƏ EDİLİR)
+// DATABASE BAŞLANĞICI
 // =========================================================
 async function initDB() {
   try {
-    // 1. Cədvəlləri yarat
     await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user');`;
     await sql`CREATE TABLE IF NOT EXISTS categories (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, name TEXT NOT NULL);`;
     await sql`CREATE TABLE IF NOT EXISTS tasks (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', category TEXT NOT NULL DEFAULT 'general', description TEXT, due_date TEXT);`;
 
-    // 2. YENİ SÜTUNLAR (Əgər yoxdursa əlavə et)
-    // parent_id: Alt tapşırıqlar üçün
     try { await sql`ALTER TABLE tasks ADD COLUMN parent_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE`; } catch (e) {}
-    // recurrence: Təkrarlama qaydası (günlük, həftəlik)
     try { await sql`ALTER TABLE tasks ADD COLUMN recurrence TEXT`; } catch (e) {}
-    // recurrence_end: Təkrarlama nə vaxt bitsin
     try { await sql`ALTER TABLE tasks ADD COLUMN recurrence_end TEXT`; } catch (e) {}
 
-    console.log("✅ Server və Baza (Alt tapşırıq + Təkrar) Hazırdır!");
+    console.log("✅ Server Hazırdır!");
   } catch (err) { console.error("❌ Baza Xətası:", err.message); }
 }
 initDB();
@@ -63,16 +58,28 @@ app.post("/api/users/register", async (req, res) => {
   }
 });
 
+// 👇 DÜZƏLDİLƏN HİSSƏ BURADADIR 👇
 app.post("/api/users/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const result = await sql`SELECT * FROM users WHERE username = ${username}`;
     const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) return res.status(400).json({ error: "Səhv məlumat." });
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+    
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+        return res.status(400).json({ error: "Səhv məlumat." });
+    }
+
+    // ƏSAS DƏYİŞİKLİK: Tokenin içinə 'username' əlavə etdik
+    const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role }, 
+        JWT_SECRET, 
+        { expiresIn: '1h' }
+    );
+
     res.json({ message: "Giriş uğurlu", token, role: user.role });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+// 👆 ---------------------------- 👆
 
 function authenticateToken(req, res, next) {
   const t = req.headers['authorization']?.split(' ')[1];
@@ -80,17 +87,15 @@ function authenticateToken(req, res, next) {
   jwt.verify(t, JWT_SECRET, (err, u) => { if(err) return res.sendStatus(403); req.user = u; next(); });
 }
 
-// --- TASKS API (Yeniləndi) ---
+// --- TASKS API ---
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   try {
-    // Tapşırıqları gətirəndə parent_id-yə görə sıralayacağıq (Frontend-də)
     const result = await sql`SELECT * FROM tasks WHERE user_id = ${req.user.id} ORDER BY id DESC`;
     res.json({ tasks: result.rows });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post("/api/tasks", authenticateToken, async (req, res) => {
-  // parent_id, recurrence, recurrence_end əlavə olundu
   const { title, category, description, due_date, parent_id, recurrence, recurrence_end } = req.body;
   try {
     const result = await sql`
