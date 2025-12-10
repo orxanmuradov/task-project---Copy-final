@@ -17,38 +17,45 @@
             </div>
         </header>
 
-        <form id="task-form">
-            <div class="form-row">
-                <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
-                
-                <select id="task-category">
-                    <option value="general">Ümumi</option>
-                    <option value="work">İş</option>
-                    <option value="home">Ev</option>
-                    <option value="shopping">Alış-veriş</option>
-                    <option value="new_category" style="color: gold; font-weight: bold;">+ Yeni Kateqoriya</option>
-                </select>
-            </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tasks')"><i class="fas fa-list"></i> Tapşırıqlar</button>
+            <button class="tab-btn" onclick="switchTab('notes')"><i class="fas fa-sticky-note"></i> Qeydlər & Hədəflər</button>
+        </div>
 
-            <!-- <div id="new-cat-container" style="display: none; margin-top: 10px;">
-                <input type="text" id="new-cat-input" placeholder="Kateqoriya adını bura yazın (Məs: İdman)...">
-            </div> -->
+        <div id="tasks-view" class="view-section">
+            <form id="task-form">
+                <div class="form-row">
+                    <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
+                    <select id="task-category">
+                        </select>
+                </div>
+                <div id="new-cat-container" style="display: none; margin-top: 10px;">
+                    <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı...">
+                    <div id="custom-cat-wrapper" style="margin-top: 10px;">
+                        <p style="font-size: 0.8rem; color: #888;">Mövcud Kateqoriyalar:</p>
+                        <div id="custom-cat-list"></div>
+                    </div>
+                </div>
+                <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
+            </form>
+            <ul id="task-list"></ul>
+        </div>
 
-
-            <div id="new-cat-container" style="display: none; margin-top: 10px;">
-    <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı (Məs: İdman)...">
-    
-    <div id="custom-cat-wrapper" style="margin-top: 10px;">
-        <p style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">Mövcud Kateqoriyalar:</p>
-        <div id="custom-cat-list"></div> </div>
-</div>
-
-
-
-            <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
-        </form>
-
-        <ul id="task-list"></ul>
+        <div id="notes-view" class="view-section" style="display: none;">
+            <form id="note-form">
+                <input type="text" id="note-title" placeholder="Başlıq (Məs: 2024 Hədəfləri)..." required>
+                <div class="form-row" style="margin-top: 10px;">
+                    <select id="note-type">
+                        <option value="text">📝 Sadə Mətn</option>
+                        <option value="checklist">✅ Hədəf (Checklist)</option>
+                    </select>
+                    <button type="submit" class="add-btn" style="margin-top:0;">Yarat</button>
+                </div>
+            </form>
+            
+            <div id="notes-list" class="notes-grid">
+                </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
