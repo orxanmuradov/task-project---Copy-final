@@ -290,3 +290,78 @@ li.completed .check-btn {
 @media (max-width: 600px) {
     .form-row { flex-direction: column; }
 }
+
+
+
+
+/* ... Yuxarıdakı köhnə kodlar qalır ... */
+
+/* ALT TAPŞIRIQ (Subtask) Dizaynı */
+.sub-task-item {
+    margin-left: 30px; /* İçəri girsin */
+    border-left: 3px solid #555 !important; /* Rəngi boz olsun */
+    transform: scale(0.98);
+}
+.sub-task-icon {
+    color: var(--primary-color);
+    margin-right: 5px;
+    font-size: 0.8rem;
+}
+
+/* Təkrarlama və Alt Tapşırıq Düymələri (Edit panelində) */
+.extra-options {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #444;
+}
+
+.option-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.option-group label {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.small-select, .small-input {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.subtask-btn {
+    background: #333;
+    color: var(--primary-color);
+    border: 1px dashed var(--primary-color);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    width: 100%;
+}
+.subtask-btn:hover {
+    background: #444;
+}
+
+/* Təkrarlama etiketi (Siyahıda görünməsi üçün) */
+.recurrence-tag {
+    font-size: 0.7rem;
+    color: #00e676; /* Yaşıl */
+    background: rgba(0, 230, 118, 0.1);
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
