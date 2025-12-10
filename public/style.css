@@ -683,3 +683,120 @@ input[type="date"] {
     order: 1; /* Checkbox ən sağa keçsin */
     margin-left: 10px;
 }
+
+
+
+
+/* =========================================
+   ✅ HƏDƏFLƏR (CHECKLIST) QƏŞƏNG DİZAYN
+   ========================================= */
+
+/* Hər bir hədəf bloku */
+.checklist-item-wrapper {
+    background: #1e1e1e; /* Daha tünd fon */
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #444;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative; /* Silmə düyməsi üçün */
+    transition: 0.3s;
+}
+
+/* Bitmiş hədəf */
+.checklist-item-wrapper.done {
+    border-color: var(--success);
+    opacity: 0.7;
+}
+
+/* 1. Sətir: Checkbox və Ad */
+.checklist-main-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.checklist-main-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--success);
+}
+
+/* Silmə Düyməsi (Sağ küncdə qəşəng dursun) */
+.delete-sub-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 77, 77, 0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.delete-sub-btn:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* 2. Sətir: Tarix və Qeyd (Yanaşı və Etiketli) */
+.checklist-details-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: #252525;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Inputlar üçün ümumi stil */
+.cl-date, .cl-note {
+    background: transparent !important;
+    border: none !important;
+    color: #ddd !important;
+    font-size: 0.9rem;
+    padding: 5px;
+    outline: none;
+}
+
+/* Tarix xanası */
+.cl-date {
+    border-right: 1px solid #555 !important; /* Ayırıcı xətt */
+    width: 130px;
+}
+
+/* Qeyd xanası */
+.cl-note {
+    flex: 1;
+}
+
+.cl-note::placeholder {
+    font-style: italic;
+    color: #666 !important;
+}
+
+/* Mobil Uyğunluq */
+@media (max-width: 600px) {
+    .checklist-details-row {
+        flex-direction: column; /* Alt-alta */
+        gap: 5px;
+        align-items: stretch;
+    }
+    .cl-date {
+        border-right: none !important;
+        border-bottom: 1px solid #555 !important;
+        width: 100%;
+    }
+}

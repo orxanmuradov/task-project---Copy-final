@@ -1,4 +1,4 @@
- // =========================================================
+// =========================================================
 // 1. DATABASE LİNKİ
 // =========================================================
 process.env.POSTGRES_URL = "postgresql://neondb_owner:npg_Auyr0o2pfaDC@ep-gentle-leaf-adm3ylo1-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require";
@@ -23,29 +23,18 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'log
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
-// =========================================================
-// DATABASE BAŞLANĞICI
-// =========================================================
 async function initDB() {
   try {
     await sql`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user');`;
     await sql`CREATE TABLE IF NOT EXISTS categories (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, name TEXT NOT NULL);`;
     await sql`CREATE TABLE IF NOT EXISTS tasks (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', category TEXT NOT NULL DEFAULT 'general', description TEXT, due_date TEXT);`;
+    await sql`CREATE TABLE IF NOT EXISTS notes (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, title TEXT NOT NULL, type TEXT NOT NULL, content TEXT);`;
     
-    // YENİ: Qeydlər və Hədəflər cədvəli
-    await sql`CREATE TABLE IF NOT EXISTS notes (
-        id SERIAL PRIMARY KEY, 
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
-        title TEXT NOT NULL, 
-        type TEXT NOT NULL, -- 'text' və ya 'checklist'
-        content TEXT -- Sadə mətn və ya JSON (checklist üçün)
-    );`;
-
     try { await sql`ALTER TABLE tasks ADD COLUMN parent_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN recurrence TEXT`; } catch (e) {}
     try { await sql`ALTER TABLE tasks ADD COLUMN recurrence_end TEXT`; } catch (e) {}
     
-    console.log("✅ Server və Notes Cədvəli Hazırdır!");
+    console.log("✅ Server Hazırdır!");
   } catch (err) { console.error("❌ Baza Xətası:", err.message); }
 }
 initDB();
@@ -80,7 +69,7 @@ function authenticateToken(req, res, next) {
   jwt.verify(t, JWT_SECRET, (err, u) => { if(err) return res.sendStatus(403); req.user = u; next(); });
 }
 
-// --- TASKS API ---
+// --- TASKS ---
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   try { const r = await sql`SELECT * FROM tasks WHERE user_id = ${req.user.id} ORDER BY id DESC`; res.json({ tasks: r.rows }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -99,7 +88,7 @@ app.delete("/api/tasks/:id", authenticateToken, async (req, res) => {
   try { await sql`DELETE FROM tasks WHERE id=${req.params.id} AND user_id=${req.user.id}`; res.json({ message: "Silindi" }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- CATEGORIES API ---
+// --- CATEGORIES ---
 app.get("/api/categories", authenticateToken, async (req, res) => {
     try { const r = await sql`SELECT * FROM categories WHERE user_id = ${req.user.id}`; res.json({ categories: r.rows }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -110,36 +99,37 @@ app.delete("/api/categories/:id", authenticateToken, async (req, res) => {
     try { await sql`DELETE FROM categories WHERE id=${req.params.id} AND user_id=${req.user.id}`; res.json({ message: "Silindi" }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- YENİ: NOTES & GOALS API ---
+// --- NOTES ---
 app.get("/api/notes", authenticateToken, async (req, res) => {
     try { const r = await sql`SELECT * FROM notes WHERE user_id = ${req.user.id} ORDER BY id DESC`; res.json({ notes: r.rows }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
 app.post("/api/notes", authenticateToken, async (req, res) => {
-    const { title, type, content } = req.body;
-    try { 
-        const r = await sql`INSERT INTO notes (user_id, title, type, content) VALUES (${req.user.id}, ${title}, ${type}, ${content}) RETURNING *`; 
-        res.status(201).json(r.rows[0]); 
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    const { title, type, content } = req.body; try { const r = await sql`INSERT INTO notes (user_id, title, type, content) VALUES (${req.user.id}, ${title}, ${type}, ${content}) RETURNING *`; res.status(201).json(r.rows[0]); } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
 app.put("/api/notes/:id", authenticateToken, async (req, res) => {
-    const { content } = req.body;
-    try { 
-        await sql`UPDATE notes SET content=${content} WHERE id=${req.params.id} AND user_id=${req.user.id}`; 
-        res.json({ message: "Yeniləndi" }); 
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    const { content } = req.body; try { await sql`UPDATE notes SET content=${content} WHERE id=${req.params.id} AND user_id=${req.user.id}`; res.json({ message: "Yeniləndi" }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
 app.delete("/api/notes/:id", authenticateToken, async (req, res) => {
     try { await sql`DELETE FROM notes WHERE id=${req.params.id} AND user_id=${req.user.id}`; res.json({ message: "Silindi" }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-
 // --- ADMIN API ---
 function authenticateAdmin(req, res, next) { if (req.user.role !== 'admin') return res.status(403).json({ error: "İcazəniz yoxdur" }); next(); }
+
 app.get("/api/admin/users", [authenticateToken, authenticateAdmin], async (req, res) => { const r = await sql`SELECT id, username, role FROM users`; res.json({ users: r.rows }); });
 app.delete("/api/admin/users/:id", [authenticateToken, authenticateAdmin], async (req, res) => { await sql`DELETE FROM users WHERE id=${req.params.id}`; res.json({ message: "Silindi" }); });
 app.get("/api/admin/tasks", [authenticateToken, authenticateAdmin], async (req, res) => { const r = await sql`SELECT tasks.*, users.username FROM tasks JOIN users ON tasks.user_id = users.id ORDER BY tasks.id DESC`; res.json({ tasks: r.rows }); });
+
+// 👇 YENİ: ADMİN TƏMİZLİK (Cleanup) 👇
+app.delete("/api/admin/cleanup", [authenticateToken, authenticateAdmin], async (req, res) => {
+    try {
+        // Bütün tamamlanmış (completed) tapşırıqları sil
+        const result = await sql`DELETE FROM tasks WHERE status = 'completed'`;
+        res.json({ message: "Bütün bitmiş tapşırıqlar silindi!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// 👆 ------------------------------ 👆
 
 app.listen(port, () => console.log(`🚀 Server işləyir: http://localhost:${port}`));
