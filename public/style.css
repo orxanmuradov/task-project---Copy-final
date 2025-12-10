@@ -365,3 +365,33 @@ li.completed .check-btn {
     align-items: center;
     gap: 3px;
 }
+
+
+
+
+
+
+/* ... Yuxarıdakı kodlar qalır ... */
+
+/* Yeni Kateqoriya Inputu */
+#new-cat-input {
+    background: #252525;
+    border: 2px solid var(--primary-color); /* Sarı çərçivə */
+    color: white; /* Ağ yazı */
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1rem;
+    outline: none;
+    animation: fadeIn 0.3s ease; /* Açılma animasiyası */
+}
+
+#new-cat-input::placeholder {
+    color: #777;
+}
+
+/* Animasiya */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
