@@ -635,3 +635,51 @@ input[type="date"] {
     }
     .cl-date { width: 100%; }
 }
+
+
+/* =========================================
+   🔄 YER DƏYİŞMƏ (SWAP SIDES)
+   ========================================= */
+
+/* 1. ƏSAS TAPŞIRIQLAR: Düymələr Sola, Yazı Sağa */
+.task-header {
+    flex-direction: row-reverse; /* Elementlərin yerini dəyişir */
+}
+
+.task-info {
+    text-align: right; /* Yazını sağ tərəfə yaslayır */
+}
+
+/* Düymələrin arasındakı məsafəni tənzimlə */
+.actions {
+    margin-left: 0 !important;
+    margin-right: 15px;
+}
+
+.sub-task-icon {
+    margin-right: 0;
+    margin-left: 5px; /* İkonu yazının sağına keçir */
+    transform: rotate(0deg); /* Ox işarəsini düzəlt */
+}
+
+/* 2. HƏDƏFLƏR (CHECKLIST): Qeyd Sola, Tarix Sağa */
+.checklist-details-row {
+    flex-direction: row-reverse; /* Qeyd sola, Tarix sağa keçir */
+}
+
+/* 3. CHECKLIST SƏTİRLƏRİ: Silmə düyməsi Sola */
+.checklist-main-row {
+    flex-direction: row-reverse;
+}
+
+.delete-sub-btn {
+    margin-left: 0;
+    margin-right: auto; /* Sola yapışdırır */
+    color: var(--danger);
+}
+
+/* Checkbox sağda qalanda qəribə görünürsə, onu düzəltmək üçün: */
+.checklist-main-row input[type="checkbox"] {
+    order: 1; /* Checkbox ən sağa keçsin */
+    margin-left: 10px;
+}
