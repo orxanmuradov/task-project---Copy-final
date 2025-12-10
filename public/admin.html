@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* Admin xüsusi CSS */
-        body { padding: 20px; color: white; background: #121212; }
+        body { padding: 20px; color: white; background: #121212; display: block; } /* Display block vacibdir */
         .admin-container { max-width: 900px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; border: 1px solid #333; }
         h1, h2 { color: #ffcc00; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -16,97 +15,97 @@
         th { background: #333; color: #ffcc00; }
         .btn-delete { background: #ff4d4d; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
         
-        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .cleanup-btn { background: #ff4d4d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .cleanup-btn:hover { background: #cc0000; }
-        .back-btn { background: #333; color: white; padding: 10px 20px; border: 1px solid #555; border-radius: 5px; text-decoration: none; }
+        .back-btn { background: #333; color: white; padding: 10px 20px; border: 1px solid #555; border-radius: 5px; text-decoration: none; display: inline-block; }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <div class="header-actions">
             <h1>🛡️ Admin İdarəetmə</h1>
-            <div>
+            <div style="display:flex; gap:10px;">
                 <button onclick="cleanupTasks()" class="cleanup-btn"><i class="fas fa-trash-alt"></i> Bitmişləri Təmizlə</button>
-                <a href="index.html" class="back-btn">Ana Səhifə</a>
-                <button id="logout-btn" class="back-btn" style="background:transparent; border-color:red; color:red;">Çıxış</button>
+                <a href="/" class="back-btn">Ana Səhifə</a>
+                <button id="logout-btn" class="back-btn" style="border-color:red; color:red;">Çıxış</button>
             </div>
         </div>
 
         <h2>👥 İstifadəçilər</h2>
-        <table>
-            <thead><tr><th>ID</th><th>Ad</th><th>Rol</th><th>Əməliyyat</th></tr></thead>
-            <tbody id="users-table-body"></tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>ID</th><th>Ad</th><th>Rol</th><th>Əməliyyat</th></tr></thead>
+                <tbody id="users-table-body"></tbody>
+            </table>
+        </div>
 
         <h2 style="margin-top: 30px;">📋 Bütün Tapşırıqlar</h2>
-        <table>
-            <thead><tr><th>ID</th><th>Tapşırıq</th><th>Status</th><th>İstifadəçi</th></tr></thead>
-            <tbody id="tasks-table-body"></tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>ID</th><th>Tapşırıq</th><th>Status</th><th>İstifadəçi</th></tr></thead>
+                <tbody id="tasks-table-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role");
+        const role = localStorage.getItem("role"); // Rolu yoxlayırıq
 
-        if (!token || role !== "admin") { window.location.href = "index.html"; }
-
-        document.getElementById("logout-btn").addEventListener("click", () => {
-            localStorage.clear(); window.location.href = "login.html";
-        });
-
-        // 1. Məlumatları Gətir
-        async function loadData() {
-            // İstifadəçilər
-            const resU = await fetch("/api/admin/users", { headers: { "Authorization": `Bearer ${token}` } });
-            const dataU = await resU.json();
-            const uBody = document.getElementById("users-table-body");
-            uBody.innerHTML = dataU.users.map(u => `
-                <tr>
-                    <td>${u.id}</td>
-                    <td>${u.username}</td>
-                    <td>${u.role}</td>
-                    <td><button onclick="deleteUser(${u.id})" class="btn-delete">Sil</button></td>
-                </tr>
-            `).join('');
-
-            // Tapşırıqlar
-            const resT = await fetch("/api/admin/tasks", { headers: { "Authorization": `Bearer ${token}` } });
-            const dataT = await resT.json();
-            const tBody = document.getElementById("tasks-table-body");
-            tBody.innerHTML = dataT.tasks.map(t => `
-                <tr>
-                    <td>${t.id}</td>
-                    <td>${t.title}</td>
-                    <td>${t.status}</td>
-                    <td>${t.username}</td>
-                </tr>
-            `).join('');
+        // Əgər token yoxdursa VƏ YA rol admin deyilsə -> Ana səhifəyə at
+        if (!token || role !== "admin") {
+            alert("Siz Admin deyilsiniz!");
+            window.location.href = "/";
         }
 
-        // 2. İstifadəçi Sil
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            localStorage.clear();
+            window.location.href = "/login";
+        });
+
+        async function loadData() {
+            try {
+                // İstifadəçilər
+                const resU = await fetch("/api/admin/users", { headers: { "Authorization": `Bearer ${token}` } });
+                if(!resU.ok) throw new Error("İcazə yoxdur");
+                const dataU = await resU.json();
+                document.getElementById("users-table-body").innerHTML = dataU.users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.username}</td>
+                        <td>${u.role}</td>
+                        <td><button onclick="deleteUser(${u.id})" class="btn-delete">Sil</button></td>
+                    </tr>
+                `).join('');
+
+                // Tapşırıqlar
+                const resT = await fetch("/api/admin/tasks", { headers: { "Authorization": `Bearer ${token}` } });
+                const dataT = await resT.json();
+                document.getElementById("tasks-table-body").innerHTML = dataT.tasks.map(t => `
+                    <tr>
+                        <td>${t.id}</td>
+                        <td>${t.title}</td>
+                        <td>${t.status}</td>
+                        <td>${t.username}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error(error);
+                alert("Məlumatları yükləmək olmadı. Yenidən giriş edin.");
+            }
+        }
+
         window.deleteUser = async (id) => {
             if(!confirm("İstifadəçini silmək istəyirsən?")) return;
             await fetch(`/api/admin/users/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
             loadData();
         };
 
-        // 3. YENİ: Bitmişləri Təmizlə
         window.cleanupTasks = async () => {
             if(!confirm("DİQQƏT: Bütün istifadəçilərin 'Completed' (Bitmiş) tapşırıqları silinəcək! Əminsən?")) return;
-            
-            const res = await fetch("/api/admin/cleanup", {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            
-            if(res.ok) {
-                alert("Baza təmizləndi!");
-                loadData();
-            } else {
-                alert("Xəta baş verdi.");
-            }
+            const res = await fetch("/api/admin/cleanup", { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+            if(res.ok) { alert("Baza təmizləndi!"); loadData(); } else { alert("Xəta baş verdi."); }
         };
 
         loadData();
