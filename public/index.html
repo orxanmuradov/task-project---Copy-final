@@ -1,6 +1,6 @@
  <!DOCTYPE html>
 <html lang="az">
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="color-scheme" content="dark">
@@ -27,20 +27,19 @@
             <form id="task-form">
                 <div class="form-row">
                     <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
-                    <select id="task-category">
-                        </select>
+                    <select id="task-category"></select>
                 </div>
                 
                 <div class="date-row">
-    <div class="date-group">
-        <label>Başlanğıc:</label>
-        <input type="datetime-local" id="task-start-date" title="Başlanğıc Tarixi">
-    </div>
-    <div class="date-group">
-        <label>Son Tarix:</label>
-        <input type="datetime-local" id="task-due-date" title="Bitmə Tarixi">
-    </div>
-</div>
+                    <div class="date-group">
+                        <label>Başlanğıc:</label>
+                        <input type="datetime-local" id="task-start-date">
+                    </div>
+                    <div class="date-group">
+                        <label>Son Tarix:</label>
+                        <input type="datetime-local" id="task-due-date">
+                    </div>
+                </div>
 
                 <div id="new-cat-container" style="display: none; margin-top: 10px;">
                     <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı (Məs: İdman)...">
@@ -75,9 +74,7 @@
         <div class="modal-box">
             <h3><i class="fas fa-level-down-alt"></i> Alt Tapşırıq</h3>
             <p>Ana tapşırığın altına yeni tapşırıq əlavə et:</p>
-            
             <input type="text" id="modal-subtask-input" placeholder="Alt tapşırığın adı..." autocomplete="off">
-            
             <div class="modal-buttons">
                 <button id="close-modal-btn" class="modal-btn cancel">Ləğv et</button>
                 <button id="save-modal-btn" class="modal-btn save">Əlavə et</button>
@@ -89,7 +86,6 @@
         <div class="modal-box">
             <h3 style="color: #ff4d4d;"><i class="fas fa-exclamation-triangle"></i> Diqqət!</h3>
             <p id="confirm-message" style="font-size: 1.1rem; margin: 20px 0;">Bunu silmək istəyirsən?</p>
-            
             <div class="modal-buttons">
                 <button id="confirm-no-btn" class="modal-btn cancel">Xeyr, Qalsın</button>
                 <button id="confirm-yes-btn" class="modal-btn delete">Bəli, Silinsin</button>
