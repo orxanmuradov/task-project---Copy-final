@@ -804,7 +804,6 @@ input[type="date"] {
 
 
 
-
 /* =========================================
    📂 KATEQORİYA QRUPLAŞDIRMA DİZAYNI
    ========================================= */
@@ -814,12 +813,13 @@ input[type="date"] {
     border: 1px solid #333;
     border-radius: 12px;
     padding: 15px;
-    margin-bottom: 20px; /* Qutular arası məsafə */
+    margin-bottom: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease;
 }
 
 .category-header {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: bold;
     color: var(--primary-color);
     margin-bottom: 12px;
@@ -828,7 +828,6 @@ input[type="date"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    text-transform: capitalize;
 }
 
 .count-badge {
@@ -837,16 +836,4 @@ input[type="date"] {
     font-size: 0.8rem;
     padding: 2px 8px;
     border-radius: 10px;
-}
-
-/* Siyahı qutunun içində səliqəli dursun */
-.category-section ul {
-    margin: 0;
-    padding: 0;
-}
-
-.category-section li {
-    background: #252525; /* Bir az daha tünd */
-    border-left: 3px solid var(--primary-color);
-    margin-bottom: 8px;
 }

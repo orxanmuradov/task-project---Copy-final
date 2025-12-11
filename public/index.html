@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
@@ -29,16 +29,19 @@
                     <select id="task-category">
                         </select>
                 </div>
+
                 <div id="new-cat-container" style="display: none; margin-top: 10px;">
-                    <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı...">
+                    <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı (Məs: İdman)...">
                     <div id="custom-cat-wrapper" style="margin-top: 10px;">
                         <p style="font-size: 0.8rem; color: #888;">Mövcud Kateqoriyalar:</p>
                         <div id="custom-cat-list"></div>
                     </div>
                 </div>
+                
                 <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
             </form>
-            <ul id="task-list"></ul>
+
+            <div id="tasks-container" style="margin-top: 25px;"></div>
         </div>
 
         <div id="notes-view" class="view-section" style="display: none;">
@@ -52,9 +55,7 @@
                     <button type="submit" class="add-btn" style="margin-top:0;">Yarat</button>
                 </div>
             </form>
-            
-            <div id="notes-list" class="notes-grid">
-                </div>
+            <div id="notes-list" class="notes-grid"></div>
         </div>
     </div>
 
