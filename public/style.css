@@ -837,3 +837,51 @@ input[type="date"] {
     padding: 2px 8px;
     border-radius: 10px;
 }
+
+
+/* =========================================
+   📅 TARİX SEÇİMİ (DATE PICKERS)
+   ========================================= */
+
+.date-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.date-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.date-group label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 4px;
+    margin-left: 2px;
+}
+
+/* Tarix xanalarını gözəlləşdiririk */
+input[type="date"] {
+    background-color: #252525 !important;
+    color: white !important;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+    font-family: inherit;
+    color-scheme: dark; /* Təqvimi qara rejimdə açır */
+}
+
+/* Hədəf (Checklist) içindəki tarix xanaları */
+.cl-date-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.cl-date-label {
+    font-size: 0.65rem;
+    color: #666;
+    margin-bottom: 2px;
+}

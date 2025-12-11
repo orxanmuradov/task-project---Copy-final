@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
@@ -26,8 +26,18 @@
             <form id="task-form">
                 <div class="form-row">
                     <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
-                    <select id="task-category">
-                        </select>
+                    <select id="task-category"></select>
+                </div>
+                
+                <div class="date-row">
+                    <div class="date-group">
+                        <label>Başlanğıc:</label>
+                        <input type="date" id="task-start-date" title="Başlanğıc Tarixi">
+                    </div>
+                    <div class="date-group">
+                        <label>Son Tarix:</label>
+                        <input type="date" id="task-due-date" title="Bitmə Tarixi">
+                    </div>
                 </div>
 
                 <div id="new-cat-container" style="display: none; margin-top: 10px;">
