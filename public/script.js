@@ -166,75 +166,69 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (checklistNotes.length > 0) { const s = document.createElement("div"); s.style.marginTop = "30px"; s.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; checklistNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); } 
     }
 
-    // ===============================================
-    // 👇 DÜZƏLDİLMİŞ HTML STRUKTURU 👇
-    // ===============================================
-    function createNoteCard(note) {
-        const div = document.createElement("div");
-        div.className = "note-card";
+    // ==========================================
+    // 👇 BURADA GECİKMƏ RƏNGİ MƏCBURİDİR 👇
+    // ==========================================
+    function createNoteCard(note){
+        const div=document.createElement("div");div.className="note-card";
+        let hh=`<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
+        let ch="";
         
-        let hh = `<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
-        let ch = "";
-        
-        if (note.type === 'text') {
-            ch = `<textarea class="note-textarea" onblur="updateNoteText(${note.id}, this.value)">${note.content || ''}</textarea>`;
-        } else {
-            let items = [];
-            try { items = JSON.parse(note.content || '[]'); } catch (e) { items = []; }
-            const today = new Date().toISOString().split('T')[0];
-
-            const renderedItems = items.map((item, index) => {
-                const isDone = item.done;
+        if(note.type==='text'){
+            ch=`<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;
+        }else{
+            let items=[];try{items=JSON.parse(note.content||'[]');}catch(e){items=[];} 
+            const today=new Date().toISOString().split('T')[0];
+            
+            const renderedItems=items.map((item,index)=>{
+                const isDone=item.done;
+                // Gecikmə Yoxlanışı (Ciddi)
                 const isOverdue = !isDone && item.endDate && item.endDate < today;
                 
-                let wrapperClass = "checklist-item-wrapper";
-                let badge = "";
-
-                if (isDone) wrapperClass += " done";
-                if (isOverdue) {
-                    wrapperClass += " overdue";
-                    badge = `<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
+                let wrapperClass="checklist-item-wrapper";
+                let badge="";
+                
+                if(isDone) wrapperClass+=" done";
+                if(isOverdue) {
+                    wrapperClass+=" overdue"; // Bu class CSS-də !important olaraq qırmızıdır
+                    badge=`<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
                 }
-
-                // DÜZƏLİŞ: HTML STUKTURU CSS İLƏ EYNİLƏŞDİ
-                const html = `
-                    <div class="${wrapperClass}">
-                        <div class="checklist-main-row">
-                            <input type="checkbox" ${isDone ? 'checked' : ''} onchange="updateChecklistItem(${note.id}, ${index}, 'done', this.checked)">
-                            <span>${item.text}</span>
-                            ${badge}
-                            <button onclick="removeChecklistItem(${note.id}, ${index})" class="delete-sub-btn"><i class="fas fa-trash"></i></button>
-                        </div>
-                        <div class="checklist-details-row">
-                            <div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div>
-                            <div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div>
-                        </div>
-                        <input type="text" class="cl-note" placeholder="Qeyd (könüllü)..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)">
-                    </div>`;
-                return { html, isDone };
+                
+                const html=`<div class="${wrapperClass}">
+                    <div class="checklist-main-row"><input type="checkbox" ${isDone?'checked':''} onchange="updateChecklistItem(${note.id},${index},'done',this.checked)"><span style="flex:1;">${item.text}</span>${badge}<button onclick="removeChecklistItem(${note.id},${index})" class="delete-sub-btn"><i class="fas fa-trash"></i></button></div><div class="checklist-details-row"><div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div><div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div></div><input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)"></div>`;
+                return{html,isDone};
             });
-
-            const activeHtml = renderedItems.filter(i => !i.isDone).map(i => i.html).join('');
-            const doneHtml = renderedItems.filter(i => i.isDone).map(i => i.html).join('');
-
-            let finalHtml = activeHtml;
-            if (doneHtml) {
-                finalHtml += `<div class="completed-divider"><span>✅ Tamamlanmış Hədəflər</span></div>` + doneHtml;
-            }
-
-            ch = `<div class="checklist-container">
-                    ${finalHtml}
-                    <input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}">
-                  </div>`;
+            
+            const activeHtml=renderedItems.filter(i=>!i.isDone).map(i=>i.html).join('');
+            const doneHtml=renderedItems.filter(i=>i.isDone).map(i=>i.html).join('');
+            
+            let finalHtml=activeHtml;
+            if(doneHtml){finalHtml+=`<div class="completed-divider"><span>✅ Tamamlanmış Hədəflər</span></div>`+doneHtml;}
+            
+            ch=`<div class="checklist-container">${finalHtml}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;
         }
-        
-        div.innerHTML = hh + ch;
-        return div;
+        div.innerHTML=hh+ch;return div;
     }
     
     window.deleteNote = (id) => { showConfirm("Bu qeydi silmək istəyirsən?", async () => { await fetch(`/api/notes/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadNotes(); }); };
     window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; 
     window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; 
-    window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});if(f==='done')loadNotes();}}; 
+    
+    // YENİ: Update edən kimi loadNotes çağır ki, rəng dərhal dəyişsin
+    window.updateChecklistItem=async(id,idx,f,v)=>{
+        const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});
+        const d=await r.json();
+        const n=d.notes.find(x=>x.id===id);
+        let i=JSON.parse(n.content||'[]');
+        
+        if(i[idx]){
+            i[idx][f]=v;
+            await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});
+            
+            // VACİB: Rəngin dərhal dəyişməsi üçün:
+            loadNotes(); 
+        }
+    }; 
+    
     window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
 });

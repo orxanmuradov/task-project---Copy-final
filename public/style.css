@@ -214,10 +214,30 @@ li.completed strong { text-decoration: line-through; }
     transition: 0.3s;
 }
 
-/* Gecikmə Dizaynı */
+/* =========================================
+   ⚠️ GECİKMƏ (OVERDUE) - MƏCBURİ QIRMIZI
+   ========================================= */
+
 .checklist-item-wrapper.overdue {
-    border-color: #ff4d4d;
-    background: rgba(255, 77, 77, 0.05); /* Çox yüngül qırmızı */
+    border: 1px solid #ff4d4d !important; /* Mütləq qırmızı olsun */
+    background-color: rgba(255, 77, 77, 0.1) !important; /* Yüngül qırmızı fon */
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.3); /* Yüngül parıltı */
+}
+
+/* Gecikmə yazısı */
+.badge-overdue {
+    background: #ff4d4d;
+    color: white;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    animation: pulse 2s infinite;
+}
 }
 
 /* Bitmiş Dizayn */
