@@ -1098,3 +1098,13 @@ li.task-overdue {
     margin-left: 10px;
     animation: pulse 2s infinite;
 }
+
+/* Təsdiq Modalındakı Silmə Düyməsi */
+.modal-btn.delete {
+    background: #ff4d4d; /* Qırmızı */
+    color: white;
+}
+.modal-btn.delete:hover {
+    background: #cc0000; /* Tünd qırmızı */
+    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+}
