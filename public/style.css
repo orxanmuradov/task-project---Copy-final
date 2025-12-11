@@ -89,12 +89,20 @@ input, select, textarea {
 }
 input:focus, select:focus { border-color: var(--primary-color) !important; }
 
-/* ✅ Kalendar İkonunu Ağartmaq */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    filter: invert(1); /* İkonu ağ rəngə çevirir */
-    cursor: pointer;
-    opacity: 0.6;
+/* Mobil Kalendar üçün Məcburi Rəng Düzəlişi */
+input[type="date"], 
+input[type="time"], 
+input[type="datetime-local"] {
+    color-scheme: light !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #ccc; /* Sərhəd qoyuruq ki, ağ fonda görünsün */
+}
+
+/* Əgər brauzer Webkit (Chrome/Safari) mühərrikidirsə */
+::-webkit-calendar-picker-indicator {
+    filter: invert(0); /* İkonu qara rəngdə saxlayır */
+    background-color: transparent;
 }
 
 .form-row, .date-row { display: flex; gap: 10px; flex-wrap: wrap; }
