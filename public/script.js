@@ -9,64 +9,13 @@
 
     document.getElementById("logout-btn").addEventListener("click", () => { localStorage.clear(); window.location.href = "login.html"; });
 
-    // --- MODAL MƏNTİQİ ---
-    const modal = document.getElementById("subtask-modal");
-    const modalInput = document.getElementById("modal-subtask-input");
-    const saveBtn = document.getElementById("save-modal-btn");
-    const closeBtn = document.getElementById("close-modal-btn");
-    let currentParentId = null; // Hansı tapşırığa alt tapşırıq əlavə edirik?
-
-    // Modalı açan funksiya
-    window.openSubtaskModal = (parentId) => {
-        currentParentId = parentId;
-        modal.style.display = "flex";
-        modalInput.value = "";
-        modalInput.focus();
-    };
-
-    // Modalı bağla
-    closeBtn.addEventListener("click", () => {
-        modal.style.display = "none";
-        currentParentId = null;
-    });
-
-    // Modalda "Əlavə et" basanda
-    saveBtn.addEventListener("click", async () => {
-        const subTitle = modalInput.value.trim();
-        if (!subTitle) {
-            alert("Adı daxil edin!");
-            return;
-        }
-        
-        // Serverə göndər
-        await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({
-                title: subTitle,
-                category: "general",
-                description: "",
-                parent_id: currentParentId // Seçilmiş ana ID
-            })
-        });
-
-        // Uğurlu olsa
-        modal.style.display = "none";
-        loadTasks(); // Siyahını yenilə
-    });
-
-    // Enter basanda da işləsin
-    modalInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") saveBtn.click();
-    });
-
-    // --- ESAS FUNKSIYALAR ---
     function formatDateAZ(dateString) {
         if (!dateString) return "";
         const date = new Date(dateString);
         return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    // --- TABS ---
     window.switchTab = (tabName) => {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(view => view.style.display = 'none');
@@ -89,6 +38,7 @@
     await loadCategories();
     await loadTasks();
 
+    // --- KATEQORİYALAR ---
     async function loadCategories() {
         categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option><option value="shopping">Alış-veriş</option>`;
         customCatList.innerHTML = "";
@@ -107,6 +57,7 @@
     categorySelect.addEventListener("change", () => { if (categorySelect.value === "new_category") { newCatContainer.style.display = "block"; newCatInput.focus(); } else { newCatContainer.style.display = "none"; } });
     window.deleteCategory = async (id, name) => { if(!confirm("Silmək?")) return; const res = await fetch(`/api/categories/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }); if(res.ok) { await loadCategories(); await loadTasks(); categorySelect.value="general"; newCatContainer.style.display="none"; } };
 
+    // --- TASK ADD ---
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         let title = document.getElementById("task-input").value; 
@@ -149,6 +100,7 @@
                 const displayName = catKey.charAt(0).toUpperCase() + catKey.slice(1);
                 const header = document.createElement("h3"); header.className = "category-header"; header.innerHTML = `<span>${translate(displayName)}</span> <span class="count-badge">${tasksInGroup.length}</span>`;
                 const ul = document.createElement("ul"); ul.style.listStyle = "none"; ul.style.padding = "0";
+                
                 tasksInGroup.forEach(parent => {
                     renderTask(parent, ul, false);
                     children.filter(c => c.parent_id === parent.id).forEach(child => renderTask(child, ul, true));
@@ -162,27 +114,13 @@
 
     function renderTask(task, listElement, isChild) {
         const li = document.createElement("li"); li.id = `task-${task.id}`; if(task.status==='completed') li.classList.add('completed'); if(isChild) li.classList.add('sub-task-item');
-        
         let dateText = "";
         if (task.start_date && task.due_date) dateText = `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.start_date)} - ${formatDateAZ(task.due_date)}`;
         else if (task.due_date) dateText = `<i class="far fa-calendar-alt"></i> Son: ${formatDateAZ(task.due_date)}`;
         else if (task.start_date) dateText = `<i class="far fa-calendar-alt"></i> Baş: ${formatDateAZ(task.start_date)}`;
-
         let recurDisplay = task.recurrence ? `<span class="recurrence-tag"><i class="fas fa-sync-alt"></i> ${translateRecurrence(task.recurrence)}</span>` : "";
         const descText = task.description ? task.description : `<span style="opacity:0.5;font-style:italic;">📝 Detallar...</span>`;
-        
-        li.innerHTML = `
-            <div class="task-header">
-                <div class="task-info" onclick="toggleAccordion(${task.id})">
-                    <strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title}</strong>
-                    <div class="task-meta">${dateText ? `<span style="color:#ffcc00; margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div>
-                </div>
-                <div class="actions">
-                    <button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button>
-                    <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-            <div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
+        li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title}</strong><div class="task-meta">${dateText ? `<span style="color:#ffcc00; margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
         listElement.appendChild(li);
     }
     
@@ -190,51 +128,114 @@
     window.toggleAccordion = (id) => document.getElementById(`task-${id}`).classList.toggle("active");
     window.deleteTask = async (id) => { if(confirm("Silmək?")) { await fetch(`/api/tasks/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadTasks(); } };
     window.toggleStatus = async (id,s,r,t,c) => { const ns=s==='completed'?'pending':'completed'; if(ns==='pending' && r && r!=='null'){ let nextDate=new Date(); if(r==='daily')nextDate.setDate(nextDate.getDate()+1);if(r==='weekly')nextDate.setDate(nextDate.getDate()+7);if(r==='monthly')nextDate.setMonth(nextDate.getMonth()+1); await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({title:t,category:c,description:"",due_date:nextDate.toISOString().split('T')[0],recurrence:r,parent_id:null})}); } await fetch(`/api/tasks/${id}/status`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({status:ns})}); loadTasks(); };
-    
-    // EDIT
-    window.editDescription = (e,id,t,start,due,r,re) => { 
-        e.stopPropagation(); const box=document.getElementById(`desc-box-${id}`); if(box.querySelector("textarea")) return; 
-        // YENİ: Alt tapşırıq düyməsi artıq window.openSubtaskModal çağırır
-        box.innerHTML = `<div class="edit-container" onclick="event.stopPropagation()">
-            <textarea class="edit-textarea" id="input-desc-${id}">${box.innerText.includes("Detallar")?"":box.innerText}</textarea>
-            <div class="extra-options">
-                <div class="date-group"><label>Başlanğıc:</label><input type="date" id="input-start-${id}" value="${start}" class="small-input"></div>
-                <div class="date-group"><label>Son Tarix:</label><input type="date" id="input-due-${id}" value="${due}" class="small-input"></div>
-                <div class="date-group"><label>Təkrar:</label><select id="input-recur-${id}" class="small-select"><option value="">Yox</option><option value="daily" ${r==='daily'?'selected':''}>Hər Gün</option><option value="weekly" ${r==='weekly'?'selected':''}>Həftəlik</option></select></div>
-            </div>
-            
-            <button class="subtask-btn" onclick="openSubtaskModal(${id})">
-                <i class="fas fa-level-down-alt"></i> Alt Tapşırıq Əlavə Et
-            </button>
+    window.editDescription = (e,id,t,start,due,r,re) => { e.stopPropagation(); const box=document.getElementById(`desc-box-${id}`); if(box.querySelector("textarea")) return; box.innerHTML = `<div class="edit-container" onclick="event.stopPropagation()"><textarea class="edit-textarea" id="input-desc-${id}">${box.innerText.includes("Detallar")?"":box.innerText}</textarea><div class="extra-options"><div class="date-group"><label>Başlanğıc:</label><input type="date" id="input-start-${id}" value="${start}" class="small-input"></div><div class="date-group"><label>Son Tarix:</label><input type="date" id="input-due-${id}" value="${due}" class="small-input"></div><div class="date-group"><label>Təkrar:</label><select id="input-recur-${id}" class="small-select"><option value="">Yox</option><option value="daily" ${r==='daily'?'selected':''}>Hər Gün</option><option value="weekly" ${r==='weekly'?'selected':''}>Həftəlik</option></select></div></div><button class="subtask-btn" onclick="openSubtaskModal(${id})"><i class="fas fa-level-down-alt"></i> Alt Tapşırıq Əlavə Et</button><div class="edit-footer"><button class="save-btn-small" onclick="saveDescription(${id},'${t}')">Yadda Saxla</button></div></div>`; };
+    window.saveDescription = async (id,t) => { const d=document.getElementById(`input-desc-${id}`).value; const start=document.getElementById(`input-start-${id}`).value; const due=document.getElementById(`input-due-${id}`).value; const r=document.getElementById(`input-recur-${id}`).value; await fetch(`/api/tasks/${id}`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,description:d,start_date:start?start:null,due_date:due?due:null,recurrence:r?r:null})}); loadTasks(); };
+    window.addSubtask = async (pid) => { const t=prompt("Alt tapşırıq:"); if(t) { await fetch("/api/tasks", {method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,category:"general",description:"",parent_id:pid})}); loadTasks(); } };
 
-            <div class="edit-footer"><button class="save-btn-small" onclick="saveDescription(${id},'${t}')">Yadda Saxla</button></div>
-        </div>`; 
-    };
-    window.saveDescription = async (id,t) => { 
-        const d=document.getElementById(`input-desc-${id}`).value; 
-        const start=document.getElementById(`input-start-${id}`).value;
-        const due=document.getElementById(`input-due-${id}`).value; 
-        const r=document.getElementById(`input-recur-${id}`).value; 
-        await fetch(`/api/tasks/${id}`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,description:d,start_date:start?start:null,due_date:due?due:null,recurrence:r?r:null})}); 
-        loadTasks(); 
-    };
+    // --- MODAL ---
+    const modal = document.getElementById("subtask-modal"); const modalInput = document.getElementById("modal-subtask-input"); const saveBtn = document.getElementById("save-modal-btn"); const closeBtn = document.getElementById("close-modal-btn"); let currentParentId = null;
+    window.openSubtaskModal = (parentId) => { currentParentId = parentId; modal.style.display = "flex"; modalInput.value = ""; modalInput.focus(); };
+    closeBtn.addEventListener("click", () => { modal.style.display = "none"; currentParentId = null; });
+    saveBtn.addEventListener("click", async () => { const subTitle = modalInput.value.trim(); if (!subTitle) { alert("Adı daxil edin!"); return; } await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ title: subTitle, category: "general", description: "", parent_id: currentParentId }) }); modal.style.display = "none"; loadTasks(); });
+    modalInput.addEventListener("keypress", (e) => { if (e.key === "Enter") saveBtn.click(); });
 
-    // NOTES (Stabil)
+    // ==========================================================
+    // 👇 YENİ: QEYDLƏRİ VƏ HƏDƏFLƏRİ AYIRAN MƏNTİQ 👇
+    // ==========================================================
     document.getElementById("note-form").addEventListener("submit", async (e) => { e.preventDefault(); const title=document.getElementById("note-title").value; const type=document.getElementById("note-type").value; const content=type==='checklist'?'[]':''; const res=await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({title,type,content})}); if(res.ok){document.getElementById("note-title").value="";loadNotes();} });
-    async function loadNotes() { const res=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}}); const data=await res.json(); const list=document.getElementById("notes-list"); list.innerHTML=""; if(!data.notes||data.notes.length===0){list.innerHTML="<p style='text-align:center;color:#555;'>Hələ qeyd yoxdur.</p>";return;} data.notes.forEach(note=>{ const div=document.createElement("div"); div.className="note-card"; let headerHtml=`<div class="note-header"><div><h3>${note.title}</h3><span class="note-type-badge">${note.type==='checklist'?'Hədəf':'Qeyd'}</span></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`; let contentHtml=""; if(note.type==='text'){contentHtml=`<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;}else{let items=[];try{items=JSON.parse(note.content||'[]');}catch(e){items=[];} 
-    let itemsHtml=items.map((item,index)=>`
-    <div class="checklist-item-wrapper ${item.done?'done':''}">
-        <div class="checklist-main-row">
-            <input type="checkbox" ${item.done?'checked':''} onchange="updateChecklistItem(${note.id},${index},'done',this.checked)">
-            <span style="flex:1;">${item.text}</span>
-            <button onclick="removeChecklistItem(${note.id},${index})" class="delete-sub-btn">&times;</button>
-        </div>
-        <div class="checklist-details-row">
-            <div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div>
-            <div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div>
-            <input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)" style="margin-top:10px;">
-        </div>
-    </div>`).join(''); contentHtml=`<div class="checklist-container">${itemsHtml}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;} div.innerHTML=headerHtml+contentHtml; list.appendChild(div); }); }
+    
+    async function loadNotes() { 
+        const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+        const container = document.getElementById("notes-list");
+        container.innerHTML = "";
+
+        if (!data.notes || data.notes.length === 0) { 
+            container.innerHTML = "<p style='text-align:center; color:#555;'>Hələ qeyd yoxdur.</p>"; 
+            return; 
+        }
+
+        // Qruplaşdıraq: Text və Checklist
+        const textNotes = data.notes.filter(n => n.type === 'text');
+        const checklistNotes = data.notes.filter(n => n.type === 'checklist');
+
+        // 1. QEYDLƏR BÖLMƏSİ (Əgər varsa)
+        if (textNotes.length > 0) {
+            const section = document.createElement("div");
+            section.innerHTML = `<h3 class="note-section-title">📝 Qeydlər</h3>`;
+            const grid = document.createElement("div");
+            grid.className = "notes-grid"; // CSS-dəki grid stili
+
+            textNotes.forEach(note => {
+                grid.appendChild(createNoteCard(note));
+            });
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+
+        // 2. HƏDƏFLƏR BÖLMƏSİ (Əgər varsa)
+        if (checklistNotes.length > 0) {
+            const section = document.createElement("div");
+            section.style.marginTop = "30px"; // Arada məsafə
+            section.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`;
+            const grid = document.createElement("div");
+            grid.className = "notes-grid";
+
+            checklistNotes.forEach(note => {
+                grid.appendChild(createNoteCard(note));
+            });
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+    }
+
+    // Kartı Yaradan Helper Funksiya
+    function createNoteCard(note) {
+        const div = document.createElement("div");
+        div.className = "note-card";
+        
+        let headerHtml = `
+            <div class="note-header">
+                <div>
+                    <h3>${note.title}</h3>
+                </div>
+                <button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+
+        let contentHtml = "";
+        if (note.type === 'text') {
+            contentHtml = `<textarea class="note-textarea" onblur="updateNoteText(${note.id}, this.value)">${note.content || ''}</textarea>`;
+        } else {
+            let items = [];
+            try { items = JSON.parse(note.content || '[]'); } catch (e) { items = []; }
+            
+            let itemsHtml = items.map((item, index) => `
+                <div class="checklist-item-wrapper ${item.done ? 'done' : ''}">
+                    <div class="checklist-main-row">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="updateChecklistItem(${note.id}, ${index}, 'done', this.checked)">
+                        <span style="flex:1;">${item.text}</span>
+                        <button onclick="removeChecklistItem(${note.id}, ${index})" class="delete-sub-btn">&times;</button>
+                    </div>
+                    <div class="checklist-details-row">
+                        <div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div>
+                        <div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div>
+                        <input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)" style="margin-top:10px;">
+                    </div>
+                </div>`).join('');
+            
+            contentHtml = `
+                <div class="checklist-container">
+                    ${itemsHtml}
+                    <input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id}, this.value); this.value='';}">
+                </div>
+            `;
+        }
+        
+        div.innerHTML = headerHtml + contentHtml;
+        return div;
+    }
+
     window.deleteNote=async(id)=>{if(!confirm("Silmək?"))return;await fetch(`/api/notes/${id}`,{method:"DELETE",headers:{"Authorization":`Bearer ${token}`}});loadNotes();}; window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; 
     window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; 
     window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});if(f==='done')loadNotes();}}; window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};

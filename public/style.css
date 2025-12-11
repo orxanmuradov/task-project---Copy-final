@@ -988,3 +988,17 @@ input[type="date"] {
 @keyframes popIn {
     to { transform: scale(1); opacity: 1; }
 }
+
+
+/* Qeyd Bölmə Başlıqları */
+.note-section-title {
+    color: var(--primary-color);
+    border-bottom: 2px solid #444;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
