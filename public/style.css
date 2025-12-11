@@ -355,3 +355,50 @@ li.active .task-desc { display: block; animation: fadeIn 0.3s; }
     padding: 10px 0;
   }
 }
+
+/* --- MOBİL ÜÇÜN MƏCBURİ KALENDAR RƏNGLƏRİ --- */
+@media screen and (max-width: 768px) {
+    
+    /* Kalendarın əsas qutusu (adlar fərqli ola bilər deyə hamısını yazırıq) */
+    .wrapper, 
+    .calendar-box, 
+    .calendar-container,
+    .container header .calendar { 
+        background-color: #ffffff !important; /* Arxa fon AĞ */
+        color: #000000 !important; /* Yazılar QARA */
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* Kalendarın içindəki bütün yazılar (Başlıq, günlər, rəqəmlər) */
+    .wrapper *, 
+    .calendar-box * {
+        color: #000000 !important; /* Məcburi QARA rəng */
+    }
+
+    /* Yalnız "Bu gün" və ya "Seçilmiş gün" fərqli olsun */
+    .days li.active,
+    .calendar .days li.active {
+        background-color: #6C63FF !important; /* Göy/Bənövşəyi fon */
+        color: #ffffff !important; /* Yazısı AĞ olsun */
+    }
+
+    /* Passiv günlər (boz rəngdə) */
+    .days li.inactive,
+    .calendar .days li.inactive {
+        color: #aaaaaa !important;
+    }
+
+    /* İkonlar (ox işarələri) */
+    .icons span,
+    .icons i {
+        background-color: #f0f0f0 !important;
+        color: #000000 !important;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        line-height: 35px;
+        text-align: center;
+        display: inline-block;
+    }
+}
