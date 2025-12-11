@@ -96,7 +96,7 @@ input[type="datetime-local"] {
     color-scheme: light !important;
     background-color: #b80606 !important;
     color: #000000 !important;
-    border: 1px solid #ccc; /* Sərhəd qoyuruq ki, ağ fonda görünsün */
+    border: 1px solid #d5cfcf; /* Sərhəd qoyuruq ki, ağ fonda görünsün */
 }
 
 /* Əgər brauzer Webkit (Chrome/Safari) mühərrikidirsə */
@@ -314,4 +314,46 @@ input[type="datetime-local"] {
 .picker__footer button {
     color: #1a73e8 !important; /* Standart göy rəng */
     font-weight: bold !important;
+}
+
+/* --- MOBİL KALENDAR FİKSİ (SON HƏLL) --- */
+
+/* 1. Kalendar və Saat pəncərəsinin (Modal) fonunu ağ, yazısını qara edirik */
+.modal, 
+.datepicker-modal, 
+.timepicker-modal {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* 2. Pəncərənin içindəki BÜTÜN elementlərin yazısını MƏCBURİ QARA edirik */
+/* Ulduz (*) işarəsi "hər şey" deməkdir */
+.modal *, 
+.datepicker-modal *, 
+.timepicker-modal * {
+    color: #000000 !important;
+}
+
+/* 3. Seçilən tarixin arxa fonunu sarı, yazısını qara edirik */
+.datepicker-date-display,
+.timepicker-display,
+.is-selected,
+.is-today {
+    background-color: #FFC107 !important; /* Sarı rəng */
+    color: #000000 !important;
+}
+
+/* 4. Aşağıdakı düymələr (Təmizlə, Ləğv et, Təyin et) */
+.modal-footer button,
+.modal-footer .btn-flat {
+    color: #000000 !important;
+    font-weight: bold !important;
+    background-color: transparent !important;
+}
+
+/* 5. Brauzerin öz standart inputları üçün (Hər ehtimala qarşı saxla) */
+input[type="date"], 
+input[type="time"] {
+    color-scheme: light !important;
+    color: #000 !important;
 }
