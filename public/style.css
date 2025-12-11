@@ -1,5 +1,5 @@
- /* =========================================
-   ÜMUMİ SİTİL (Sarı & Qara)
+/* =========================================
+   ÜMUMİ SİTİL (APP LAYOUT - FIX HEADER)
    ========================================= */
 :root {
     --primary-color: #ffcc00;
@@ -17,431 +17,167 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-tap-highlight-color: transparent; /* Mobildə toxunanda göy rəngi ləğv et */
+    -webkit-tap-highlight-color: transparent;
 }
 
+/* ƏSAS DƏYİŞİKLİK: Body Scroll-u bağlayırıq */
 body {
     background-color: var(--bg-dark);
     color: var(--text-light);
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 15px; /* Mobildə kənardan boşluq */
+    align-items: center; /* Mərkəzləşdir */
+    height: 100dvh; /* Ekran boyu */
+    width: 100vw;
+    overflow: hidden; /* Səhifənin özü sürüşməsin */
+    padding: 0; /* Mobildə tam ekran olsun */
 }
 
-/* Əsas Qutu */
+/* Əsas Qutu - Bu artıq ekranın 100%-ni tutur (mobildə) */
 .container {
     background-color: var(--bg-card);
     width: 100%;
-    max-width: 600px;
+    max-width: 600px; /* Kompüterdə limit */
+    height: 100%;     /* Tam hündürlük */
+    
+    display: flex;    /* Flex rejimi */
+    flex-direction: column; /* Elementləri alt-alta düz */
+    
     padding: 1.5rem;
-    border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    border: 1px solid #333;
-    margin-bottom: 50px; /* Aşağıda yer qalsın */
+    border-right: 1px solid #333;
+    border-left: 1px solid #333;
 }
 
-/* Header */
+/* Header və Tabs - Bunlar "flex-shrink: 0" olacaq, yəni əzilməyəcək */
 .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
+    padding-bottom: 10px;
+    flex-shrink: 0; /* Yeri sabit qalsın */
 }
 
-.main-title {
-    font-size: 1.4rem;
-    color: var(--primary-color);
-    margin: 0;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    color: var(--text-grey);
-}
-
-#logout-btn {
-    background: #333;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-/* Tabs */
 .tabs {
     display: flex;
-    gap: 5px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 15px;
     border-bottom: 1px solid #333;
     padding-bottom: 5px;
+    flex-shrink: 0; /* Yeri sabit qalsın */
 }
 
-.tab-btn {
-    flex: 1;
-    background: transparent;
-    color: #888;
-    border: none;
-    padding: 12px;
-    font-size: 1rem;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: 0.3s;
+/* View Section (Tapşırıqlar və ya Qeydlər Səhifəsi) */
+.view-section {
+    display: none; /* JS ilə açılacaq (flex olaraq) */
+    flex-direction: column;
+    flex: 1;       /* Qalan bütün yeri tutsun */
+    overflow: hidden; /* Daşmasın */
+    min-height: 0; /* Flex scroll üçün vacibdir */
 }
 
-.tab-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-    font-weight: bold;
+/* FORMA (Inputlar) - Bu da sabit qalmalıdır */
+#task-form, #note-form {
+    background: #252525;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0; /* Yeri sabit qalsın, sürüşməsin */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Yüngül kölgə */
 }
 
-/* Inputs */
+/* 🚀 ƏSAS HİSSƏ: SİYAHI (Scroll Bura Verilir) 🚀 */
+#tasks-container, #notes-list {
+    flex: 1; /* Qalan bütün boşluğu tut */
+    overflow-y: auto; /* YALNIZ BU HİSSƏ SÜRÜŞSÜN */
+    padding-right: 5px; /* Scrollbar üçün yer */
+    padding-bottom: 20px;
+    
+    /* Scrollbar Dizaynı */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #1e1e1e;
+}
+
+/* Scrollbar (Chrome/Safari) */
+#tasks-container::-webkit-scrollbar, #notes-list::-webkit-scrollbar { width: 6px; }
+#tasks-container::-webkit-scrollbar-thumb, #notes-list::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
+
+/* Digər elementlər (Köhnə dizaynlar) */
+.main-title { font-size: 1.4rem; color: var(--primary-color); margin: 0; }
+.user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-grey); }
+#logout-btn { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.tab-btn { flex: 1; background: transparent; color: #888; border: none; padding: 10px; font-size: 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: bold; }
+
+/* Inputlar */
 input, select, textarea {
-    background-color: #2c2c2c !important;
+    background-color: #333 !important;
     border: 1px solid #444 !important;
     color: white !important;
     border-radius: 8px;
-    padding: 12px;
-    font-size: 16px; /* Mobildə zoom olmaması üçün 16px vacibdir */
+    padding: 10px;
+    font-size: 1rem;
     outline: none;
     width: 100%;
 }
+input:focus, select:focus { border-color: var(--primary-color) !important; }
 
-input:focus, select:focus, textarea:focus {
-    border-color: var(--primary-color) !important;
-}
+.form-row, .date-row { display: flex; gap: 10px; }
+.date-group { flex: 1; }
+.date-group label { font-size: 0.75rem; color: #888; margin-bottom: 2px; display: block; }
 
-/* Form Layout */
-#task-form, #note-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+/* Düymələr */
+.add-btn { width: 100%; background-color: var(--primary-color); color: #000; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
 
-.form-row, .date-row {
-    display: flex;
-    gap: 10px;
-}
-
-.date-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-.date-group label {
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 5px;
-}
-
-/* Buttons */
-.add-btn {
-    width: 100%;
-    background-color: var(--primary-color);
-    color: #000;
-    border: none;
-    padding: 14px; /* Barmaq üçün daha rahat */
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-/* List Items */
+/* Task List Items */
 ul { list-style: none; padding: 0; }
+li { background-color: #2a2a2a; padding: 12px; margin-bottom: 8px; border-radius: 10px; border-left: 4px solid var(--primary-color); }
+li.task-overdue { border-left-color: var(--danger) !important; background: rgba(255, 77, 77, 0.08); }
+.task-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.task-info { flex: 1; word-break: break-word; cursor: pointer; }
+.task-info strong { font-size: 1rem; display: block; margin-bottom: 3px; }
+.task-meta { font-size: 0.75rem; color: #aaa; display: flex; gap: 8px; align-items: center; }
+.actions { display: flex; gap: 10px; align-items: center; }
+.check-btn, .delete-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
+.check-btn { color: #666; } .check-btn:hover { color: var(--success); } .delete-btn { color: var(--danger); }
+li.completed { border-left-color: var(--success); opacity: 0.6; }
+li.completed strong { text-decoration: line-through; }
 
-li {
-    background-color: #2a2a2a;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 10px;
-    border-left: 4px solid var(--primary-color);
-    position: relative;
-}
+/* Kateqoriyalar */
+.category-section { margin-bottom: 15px; }
+.category-header { font-size: 1rem; font-weight: bold; color: var(--primary-color); border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+.count-badge { background: #444; color: white; font-size: 0.75rem; padding: 2px 6px; border-radius: 8px; }
 
-li.task-overdue { border-left-color: var(--danger) !important; background: rgba(255, 77, 77, 0.1); }
-.task-overdue-badge { color: var(--danger); font-size: 0.75rem; font-weight: bold; display: block; margin-top: 2px; }
-
-/* Task Header - Flex Layout */
-.task-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.task-info {
-    flex: 1;
-    overflow: hidden; /* Daşmanın qarşısını al */
-}
-
-.task-info strong {
-    font-size: 1.1rem;
-    display: block;
-    margin-bottom: 5px;
-    word-wrap: break-word; /* Uzun sözləri qır */
-}
-
-.task-meta {
-    font-size: 0.8rem;
-    color: #aaa;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.actions {
-    display: flex;
-    gap: 15px; /* Düymələr arası məsafə */
-    align-items: center;
-    flex-shrink: 0; /* Sıxılmasın */
-}
-
-.check-btn, .delete-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.4rem; /* İkonları böyüt */
-    padding: 5px;
-    cursor: pointer;
-}
-.check-btn { color: #666; }
-.check-btn:hover { color: var(--success); }
-.delete-btn { color: var(--danger); }
+/* Edit & Modal (Sticky) */
+.edit-container { display: flex; flex-direction: column; height: 100%; }
+.sticky-edit-header { position: sticky; top: 0; z-index: 20; background-color: #2a2a2a; padding-bottom: 10px; border-bottom: 1px solid #333; margin-bottom: 10px; }
+.edit-textarea { min-height: 80px; resize: vertical; }
+.edit-footer { position: sticky; bottom: 0; z-index: 20; background-color: #2a2a2a; padding-top: 10px; border-top: 1px solid #333; }
+.save-btn-small { background-color: var(--primary-color); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; }
+.subtask-btn { background-color: #2c2c2c; color: var(--primary-color); border: 1px dashed var(--primary-color); padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: center; gap: 5px; }
 
 /* Subtasks */
-.subtask-container {
-    display: none;
-    margin-top: 10px;
-    padding-left: 10px;
-    border-left: 2px dashed #444;
-}
-.sub-task-item {
-    background: #222;
-    margin-left: 0; /* Mobildə çox sağa getməsin */
-    border-left: 3px solid #555 !important;
-}
-
-/* Category Sections */
-.category-section {
-    margin-bottom: 25px;
-}
-.category-header {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    border-bottom: 1px solid #444;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-}
+.subtask-container { display: none; margin-top: 5px; padding-left: 10px; border-left: 1px dashed #444; }
+.sub-task-item { background: #222; border-left: 2px solid #555 !important; }
 
 /* Modals */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 9999;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.modal-box {
-    background: #1e1e1e;
-    border: 1px solid var(--primary-color);
-    padding: 20px;
-    border-radius: 15px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-}
-.modal-btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 1rem;
-}
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+.modal-box { background: #1e1e1e; border: 1px solid var(--primary-color); padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
+.modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+.modal-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 .modal-btn.save { background: var(--primary-color); color: black; }
 .modal-btn.cancel { background: #333; color: white; }
 .modal-btn.delete { background: var(--danger); color: white; }
 
-/* Checklist Items */
-.checklist-item-wrapper {
-    background: #1a1a1a;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    margin-bottom: 10px;
-}
-.checklist-main-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-.checklist-main-row input[type="checkbox"] {
-    width: 24px; height: 24px; /* Mobildə checkbox böyük olsun */
-    margin: 0;
-}
-.checklist-details-row {
-    display: flex;
-    gap: 10px;
-}
-
-/* =========================================
-   📱 MOBİL ÜÇÜN XÜSUSİ DÜZƏLİŞLƏR (Mobile Override)
-   ========================================= */
-@media (max-width: 768px) {
-    body {
-        padding: 10px; /* Kənarları azalt */
-    }
-
-    .container {
-        padding: 1rem;
-        width: 100%;
-    }
-
-    /* Inputları alt-alta sal */
-    .form-row {
-        flex-direction: column;
-    }
-
-    .date-row {
-        flex-direction: column; /* Tarixlər alt-alta */
-    }
-
-    /* Checklist detallarını alt-alta sal */
-    .checklist-details-row {
-        flex-direction: column;
-    }
-    .cl-date-group, .cl-note {
-        width: 100%;
-    }
-
-    /* Task Header: Mobildə yer dardırsa */
-    .task-header {
-        align-items: flex-start; 
-    }
-
-    /* Edit panelindəki seçimlər */
-    .extra-options {
-        flex-direction: column;
-    }
-    
-    /* Fontları bir az kiçilt ki sığsın */
-    .main-title { font-size: 1.3rem; }
-}
-
-/* Alt Tapşırıq Düyməsi - ƏVVƏLKİ KİMİ AMA DAHA SƏLİQƏLİ */
-.subtask-btn {
-    background-color: #2c2c2c; /* Tünd fon */
-    color: var(--primary-color); /* Sarı yazı */
-    border: 1px dashed var(--primary-color); /* Qırıq sarı xətt (Stil üçün) */
-    padding: 12px;
-    width: 100%; /* Tam eni tutsun (Mərkəzdə dursun) */
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    
-    /* İkon və yazını mərkəzləşdirmək */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: 0.3s;
-}
-
-.subtask-btn:hover {
-    background-color: var(--primary-color); /* Üstünə gələndə saralır */
-    color: black;
-    border-style: solid; /* Xətt bütöv olur */
-}
-
-.subtask-btn i {
-    font-size: 1.1rem;
-}
-
-
-
-/* "Yadda Saxla" Düyməsi (Edit Panelində) */
-.save-btn-small {
-    background-color: var(--primary-color); /* Parlaq Sarı */
-    color: #000; /* Qara yazı */
-    border: none;
-    padding: 12px; /* Alt tapşırıq düyməsi ilə eyni hündürlükdə olsun */
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 1rem;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 10px; /* Yuxarıdakı düymədən biraz aralı olsun */
-    
-    /* Animasiya və Kölgə */
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 10px rgba(255, 204, 0, 0.2);
-}
-
-/* Üzərinə gələndə */
-.save-btn-small:hover {
-    background-color: var(--primary-hover); /* Bir az tündləşsin */
-    transform: translateY(-2px); /* Yüngülcə yuxarı qalxsın */
-    box-shadow: 0 6px 15px rgba(255, 204, 0, 0.3);
-}
-
-/* Basılanda */
-.save-btn-small:active {
-    transform: scale(0.98);
-}
-
-
-/* =========================================
-   📌 YUXARI BƏRKİDİLMİŞ BAŞLIQ (STICKY HEADER)
-   ========================================= */
-
-.sticky-edit-header {
-    position: sticky;
-    top: 0; /* Ən yuxarıda dursun */
-    z-index: 20; /* Yazıların üstündə qalsın */
-    background-color: #2a2a2a; /* Arxası görünməsin */
-    padding-bottom: 10px;
-    border-bottom: 1px solid #333; /* Ayrıcı xətt */
-    margin-bottom: 10px;
-}
-
-/* Scroll olanda başlıq ilə footer qarışmasın deyə */
-.edit-container {
-    position: relative;
-}
-
-/* Yadda Saxla düyməsi də aşağıda bərkidilib */
-.edit-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 20;
-    background-color: #2a2a2a;
-    padding-top: 10px;
-    border-top: 1px solid #333;
+/* Mobile Fixes */
+@media (max-width: 600px) {
+    .container { border-radius: 0; border: none; height: 100dvh; } /* Mobildə küncləri düz et */
+    .form-row, .date-row { flex-direction: column; gap: 8px; }
+    .checklist-details-row { flex-direction: column; }
+    .cl-date-group, .cl-note { width: 100%; }
 }
