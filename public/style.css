@@ -415,3 +415,33 @@ li.task-overdue { border-left-color: var(--danger) !important; background: rgba(
 .save-btn-small:active {
     transform: scale(0.98);
 }
+
+
+/* =========================================
+   📌 YUXARI BƏRKİDİLMİŞ BAŞLIQ (STICKY HEADER)
+   ========================================= */
+
+.sticky-edit-header {
+    position: sticky;
+    top: 0; /* Ən yuxarıda dursun */
+    z-index: 20; /* Yazıların üstündə qalsın */
+    background-color: #2a2a2a; /* Arxası görünməsin */
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333; /* Ayrıcı xətt */
+    margin-bottom: 10px;
+}
+
+/* Scroll olanda başlıq ilə footer qarışmasın deyə */
+.edit-container {
+    position: relative;
+}
+
+/* Yadda Saxla düyməsi də aşağıda bərkidilib */
+.edit-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    background-color: #2a2a2a;
+    padding-top: 10px;
+    border-top: 1px solid #333;
+}
