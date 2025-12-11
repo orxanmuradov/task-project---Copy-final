@@ -1,101 +1,110 @@
  <!DOCTYPE html>
 <html lang="az">
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tapşırıqlarım</title>
+    <title>Qeydiyyat - Tapşırıqlar</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* Giriş/Qeydiyyat üçün xüsusi mərkəzləşdirmə */
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-container { background: #1e1e1e; padding: 2rem; border-radius: 12px; border: 1px solid #333; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: #ffcc00; margin-bottom: 20px; }
+        .link { margin-top: 15px; display: block; color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+        .link:hover { color: #ffcc00; }
+        
+        /* Modal Başlıq Rəngləri */
+        .modal-success h3 { color: #00e676 !important; } /* Uğurlu - Yaşıl */
+        .modal-error h3 { color: #ff4d4d !important; }   /* Xəta - Qırmızı */
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header class="app-header">
-            <h1 class="main-title"><i class="fas fa-tasks"></i> Tapşırıqlar</h1>
-            <div class="user-info">
-                <span id="welcome-message"></span>
-                <button id="logout-btn" class="delete-btn" title="Çıxış"><i class="fas fa-sign-out-alt"></i></button>
+
+    <div class="login-container">
+        <h2>Qeydiyyat</h2>
+        <form id="register-form">
+            <div class="form-row" style="flex-direction: column;">
+                <input type="text" id="username" placeholder="İstifadəçi adı seçin" required autocomplete="off">
+                <input type="password" id="password" placeholder="Şifrə təyin edin" required>
             </div>
-        </header>
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tasks')"><i class="fas fa-list"></i> Tapşırıqlar</button>
-            <button class="tab-btn" onclick="switchTab('notes')"><i class="fas fa-sticky-note"></i> Qeydlər & Hədəflər</button>
-        </div>
-
-        <div id="tasks-view" class="view-section">
-            <form id="task-form">
-                <div class="form-row">
-                    <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required>
-                    <select id="task-category">
-                        </select>
-                </div>
-                
-                <div class="date-row">
-                    <div class="date-group">
-                        <label>Başlanğıc:</label>
-                        <input type="date" id="task-start-date" title="Başlanğıc Tarixi">
-                    </div>
-                    <div class="date-group">
-                        <label>Son Tarix:</label>
-                        <input type="date" id="task-due-date" title="Bitmə Tarixi">
-                    </div>
-                </div>
-
-                <div id="new-cat-container" style="display: none; margin-top: 10px;">
-                    <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı (Məs: İdman)...">
-                    <div id="custom-cat-wrapper" style="margin-top: 10px;">
-                        <p style="font-size: 0.8rem; color: #888;">Mövcud Kateqoriyalar:</p>
-                        <div id="custom-cat-list"></div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
-            </form>
-
-            <div id="tasks-container" style="margin-top: 25px;"></div>
-        </div>
-
-        <div id="notes-view" class="view-section" style="display: none;">
-            <form id="note-form">
-                <input type="text" id="note-title" placeholder="Başlıq (Məs: 2024 Hədəfləri)..." required>
-                <div class="form-row" style="margin-top: 10px;">
-                    <select id="note-type">
-                        <option value="text">📝 Sadə Mətn</option>
-                        <option value="checklist">✅ Hədəf (Checklist)</option>
-                    </select>
-                    <button type="submit" class="add-btn" style="margin-top:0;">Yarat</button>
-                </div>
-            </form>
-            <div id="notes-list" class="notes-grid"></div>
-        </div>
+            <button type="submit" class="add-btn" style="margin-top: 20px;">Qeydiyyatdan Keç</button>
+        </form>
+        <a href="login.html" class="link">Artıq hesabın var? Daxil ol</a>
     </div>
 
-    <div id="subtask-modal" class="modal-overlay">
+    <div id="status-modal" class="modal-overlay">
         <div class="modal-box">
-            <h3><i class="fas fa-level-down-alt"></i> Alt Tapşırıq</h3>
-            <p>Ana tapşırığın altına yeni tapşırıq əlavə et:</p>
-            
-            <input type="text" id="modal-subtask-input" placeholder="Alt tapşırığın adı..." autocomplete="off">
+            <h3 id="modal-title">Bildiriş</h3>
+            <p id="modal-message" style="margin: 15px 0; color: #ccc; font-size: 1rem;"></p>
             
             <div class="modal-buttons">
-                <button id="close-modal-btn" class="modal-btn cancel">Ləğv et</button>
-                <button id="save-modal-btn" class="modal-btn save">Əlavə et</button>
+                <button id="modal-ok-btn" class="modal-btn save">Başa düşdüm</button>
             </div>
         </div>
     </div>
 
-    <div id="confirm-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3 style="color: #ff4d4d;"><i class="fas fa-exclamation-triangle"></i> Diqqət!</h3>
-            <p id="confirm-message" style="font-size: 1.1rem; margin: 20px 0;">Bunu silmək istəyirsən?</p>
+    <script>
+        // Modal Elementləri
+        const modal = document.getElementById("status-modal");
+        const modalBox = document.querySelector(".modal-box");
+        const modalTitle = document.getElementById("modal-title");
+        const modalMessage = document.getElementById("modal-message");
+        const modalBtn = document.getElementById("modal-ok-btn");
+        
+        let redirectAfterClose = false; // "Tamam" basanda yönləndirsin?
+
+        // Modalı Açaq Funksiya
+        function showModal(title, message, isSuccess) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
             
-            <div class="modal-buttons">
-                <button id="confirm-no-btn" class="modal-btn cancel">Xeyr, Qalsın</button>
-                <button id="confirm-yes-btn" class="modal-btn delete">Bəli, Silinsin</button>
-            </div>
-        </div>
-    </div>
+            // Rəngləri tənzimləyək
+            if (isSuccess) {
+                modalBox.classList.remove("modal-error");
+                modalBox.classList.add("modal-success");
+                redirectAfterClose = true;
+            } else {
+                modalBox.classList.remove("modal-success");
+                modalBox.classList.add("modal-error");
+                redirectAfterClose = false;
+            }
 
-    <script src="script.js"></script>
+            modal.style.display = "flex";
+        }
+
+        // Modal düyməsinə basanda
+        modalBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+            if (redirectAfterClose) {
+                window.location.href = "login.html";
+            }
+        });
+
+        // Qeydiyyat Məntiqi
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const res = await fetch("/api/users/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showModal("Təbriklər! 🎉", "Qeydiyyat uğurla tamamlandı. İndi giriş edə bilərsiniz.", true);
+                } else {
+                    showModal("Xəta!", data.error || "Qeydiyyat alınmadı.", false);
+                }
+            } catch (err) {
+                showModal("Server Xətası", "Serverlə əlaqə kəsildi. İnterneti yoxlayın.", false);
+                console.error(err);
+            }
+        });
+    </script>
 </body>
 </html>
