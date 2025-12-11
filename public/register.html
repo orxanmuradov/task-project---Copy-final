@@ -1,28 +1,111 @@
- <!DOCTYPE html>
+
+<!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qeydiyyat - Tapşırıq Siyahısı</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="auth.style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Qeydiyyat - Tapşırıqlar</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Giriş/Qeydiyyat üçün xüsusi mərkəzləşdirmə */
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-container { background: #1e1e1e; padding: 2rem; border-radius: 12px; border: 1px solid #333; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: #ffcc00; margin-bottom: 20px; }
+        .link { margin-top: 15px; display: block; color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+        .link:hover { color: #ffcc00; }
+        
+        /* Modal Başlıq Rəngləri */
+        .modal-success h3 { color: #00e676 !important; } /* Uğurlu - Yaşıl */
+        .modal-error h3 { color: #ff4d4d !important; }   /* Xəta - Qırmızı */
+    </style>
 </head>
 <body>
-    <div class="auth-container">
+
+    <div class="login-container">
         <h2>Qeydiyyat</h2>
         <form id="register-form">
-            <label for="username">İstifadəçi adı:</label>
-            <input type="text" id="username" required>
-            
-            <label for="password">Parol:</label>
-            <input type="password" id="password" required>
-            
-            <button type="submit">Qeydiyyatdan Keç</button>
+            <div class="form-row" style="flex-direction: column;">
+                <input type="text" id="username" placeholder="İstifadəçi adı seçin" required autocomplete="off">
+                <input type="password" id="password" placeholder="Şifrə təyin edin" required>
+            </div>
+            <button type="submit" class="add-btn" style="margin-top: 20px;">Qeydiyyatdan Keç</button>
         </form>
-        <p id="error-message" class="error"></p>
-        <p class="switch-form">Artıq hesabınız var? <a href="login.html">Daxil olun</a></p>
+        <a href="login.html" class="link">Artıq hesabın var? Daxil ol</a>
     </div>
-    
-    <script src="register.js"></script>
+
+    <div id="status-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modal-title">Bildiriş</h3>
+            <p id="modal-message" style="margin: 15px 0; color: #ccc; font-size: 1rem;"></p>
+            
+            <div class="modal-buttons">
+                <button id="modal-ok-btn" class="modal-btn save">Başa düşdüm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Elementləri
+        const modal = document.getElementById("status-modal");
+        const modalBox = document.querySelector(".modal-box");
+        const modalTitle = document.getElementById("modal-title");
+        const modalMessage = document.getElementById("modal-message");
+        const modalBtn = document.getElementById("modal-ok-btn");
+        
+        let redirectAfterClose = false; // "Tamam" basanda yönləndirsin?
+
+        // Modalı Açaq Funksiya
+        function showModal(title, message, isSuccess) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            
+            // Rəngləri tənzimləyək
+            if (isSuccess) {
+                modalBox.classList.remove("modal-error");
+                modalBox.classList.add("modal-success");
+                redirectAfterClose = true;
+            } else {
+                modalBox.classList.remove("modal-success");
+                modalBox.classList.add("modal-error");
+                redirectAfterClose = false;
+            }
+
+            modal.style.display = "flex";
+        }
+
+        // Modal düyməsinə basanda
+        modalBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+            if (redirectAfterClose) {
+                window.location.href = "login.html";
+            }
+        });
+
+        // Qeydiyyat Məntiqi
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            try {
+                const res = await fetch("/api/users/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showModal("Təbriklər! 🎉", "Qeydiyyat uğurla tamamlandı. İndi giriş edə bilərsiniz.", true);
+                } else {
+                    showModal("Xəta!", data.error || "Qeydiyyat alınmadı.", false);
+                }
+            } catch (err) {
+                showModal("Server Xətası", "Serverlə əlaqə kəsildi. İnterneti yoxlayın.", false);
+                console.error(err);
+            }
+        });
+    </script>
 </body>
 </html>
