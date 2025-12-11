@@ -351,3 +351,35 @@ li.task-overdue { border-left-color: var(--danger) !important; background: rgba(
     /* Fontları bir az kiçilt ki sığsın */
     .main-title { font-size: 1.3rem; }
 }
+
+/* Alt Tapşırıq Düyməsi - ƏVVƏLKİ KİMİ AMA DAHA SƏLİQƏLİ */
+.subtask-btn {
+    background-color: #2c2c2c; /* Tünd fon */
+    color: var(--primary-color); /* Sarı yazı */
+    border: 1px dashed var(--primary-color); /* Qırıq sarı xətt (Stil üçün) */
+    padding: 12px;
+    width: 100%; /* Tam eni tutsun (Mərkəzdə dursun) */
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    
+    /* İkon və yazını mərkəzləşdirmək */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.subtask-btn:hover {
+    background-color: var(--primary-color); /* Üstünə gələndə saralır */
+    color: black;
+    border-style: solid; /* Xətt bütöv olur */
+}
+
+.subtask-btn i {
+    font-size: 1.1rem;
+}
