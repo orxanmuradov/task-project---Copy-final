@@ -181,3 +181,31 @@ li.completed strong { text-decoration: line-through; }
     .checklist-details-row { flex-direction: column; }
     .cl-date-group, .cl-note { width: 100%; }
 }
+
+/* =========================================
+   TAMAMLANMIŞ HƏDƏFLƏR (VISUAL)
+   ========================================= */
+
+/* Ayrıcı Xətt */
+.completed-divider {
+    text-align: center;
+    color: var(--primary-color); /* Sarı rəng */
+    margin: 20px 0 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border-top: 2px dashed #444; /* Qırıq xətt */
+    padding-top: 10px;
+    opacity: 0.8;
+}
+
+/* Bitmiş Elementin Dizaynı */
+.checklist-item-wrapper.done {
+    opacity: 0.6; /* Bir az solğun */
+    border-color: var(--success); /* Yaşıl çərçivə */
+    background-color: rgba(0, 230, 118, 0.05); /* Yüngül yaşıl fon */
+}
+
+.checklist-item-wrapper.done .checklist-main-row span {
+    text-decoration: line-through; /* Üstündən xətt çək */
+    color: #888;
+}

@@ -15,7 +15,7 @@
         return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
-    // --- TABS (FLEXBOX FIX) ---
+    // --- TABS ---
     window.switchTab = (tabName) => {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(view => view.style.display = 'none');
@@ -171,31 +171,25 @@
         if (checklistNotes.length > 0) { const s = document.createElement("div"); s.style.marginTop = "30px"; s.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; checklistNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); } 
     }
 
-    // ===============================================
-    // 👇 YENİ: CHECKLIST MƏNTİQİ (AKTİV/BİTMİŞ AYIRMA) 👇
-    // ===============================================
+    // ==============================================================
+    // 👇 YENİLƏNMİŞ HƏDƏF KARTI (TAMAMLANANLARI AYIRIR) 👇
+    // ==============================================================
     function createNoteCard(note) {
         const div = document.createElement("div");
         div.className = "note-card";
         
-        let headerHtml = `
-            <div class="note-header">
-                <div><h3>${note.title}</h3></div>
-                <button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button>
-            </div>`;
-        
-        let contentHtml = "";
+        let hh = `<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
+        let ch = "";
         
         if (note.type === 'text') {
-            contentHtml = `<textarea class="note-textarea" onblur="updateNoteText(${note.id}, this.value)">${note.content || ''}</textarea>`;
+            ch = `<textarea class="note-textarea" onblur="updateNoteText(${note.id}, this.value)">${note.content || ''}</textarea>`;
         } else {
             let items = [];
             try { items = JSON.parse(note.content || '[]'); } catch (e) { items = []; }
             
             const today = new Date().toISOString().split('T')[0];
 
-            // Item-ləri render edirik (HTML-lərini yaradırıq)
-            // DİQQƏT: Orijinal indeksi saxlamaq üçün map-i burada edirik
+            // 1. Elementləri render et (Amma hələ birləşdirmə)
             const renderedItems = items.map((item, index) => {
                 const isDone = item.done;
                 const isOverdue = !isDone && item.endDate && item.endDate < today;
@@ -209,6 +203,7 @@
                     badge = `<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
                 }
 
+                // Render HTML
                 const html = `
                     <div class="${wrapperClass}">
                         <div class="checklist-main-row">
@@ -226,24 +221,23 @@
                 return { html, isDone };
             });
 
-            // Aktiv və Bitmişləri Ayırırıq
+            // 2. Aktiv və Bitmişləri Ayır
             const activeHtml = renderedItems.filter(i => !i.isDone).map(i => i.html).join('');
             const doneHtml = renderedItems.filter(i => i.isDone).map(i => i.html).join('');
 
             let finalHtml = activeHtml;
-            // Əgər bitmiş varsa, onları aşağıda göstər
+            // 3. Əgər bitmiş varsa, araya xətt çək və onları qoy
             if (doneHtml) {
-                finalHtml += `<div class="completed-divider"><span>Tamamlananlar</span></div>` + doneHtml;
+                finalHtml += `<div class="completed-divider"><span>✅ Tamamlanmış Hədəflər</span></div>` + doneHtml;
             }
 
-            contentHtml = `
-                <div class="checklist-container">
+            ch = `<div class="checklist-container">
                     ${finalHtml}
                     <input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}">
-                </div>`;
+                  </div>`;
         }
         
-        div.innerHTML = headerHtml + contentHtml;
+        div.innerHTML = hh + ch;
         return div;
     }
     
