@@ -305,3 +305,53 @@ li.active .task-desc { display: block; animation: fadeIn 0.3s; }
     .form-row, .date-row, .checklist-details-row, .extra-options { flex-direction: column; gap: 8px; }
     .task-header { align-items: flex-start; }
 }
+
+/* Kalendarın əsas konteyneri */
+.wrapper, .calendar-box { 
+    background-color: #ffffff !important; /* Ağ fon */
+    color: #000000 !important; /* Qara yazı */
+}
+
+/* Kalendarın başlığı (Ay və il) */
+.wrapper header .current-date,
+.calendar-box header .current-date {
+    color: #000000 !important;
+}
+
+/* Həftənin günləri və tarixlər (Rəqəmlər) */
+.calendar ul li,
+.calendar .days li,
+.calendar .weeks li {
+    color: #333333 !important; /* Tünd boz/qara rəqəmlər */
+    font-weight: 500; /* Bir az qalın olsun ki, yaxşı görünsün */
+}
+
+/* Aktiv gün (məsələn bu gün) */
+.calendar .days li.active {
+    color: #fff !important; /* Aktiv günün yazısı ağ qalsın */
+    background-color: #6C63FF; /* Arxa fon rəngli olsun (bunu öz rənginlə dəyişə bilərsən) */
+}
+
+/* Passiv günlər (keçən ayın və ya gələn ayın günləri) */
+.calendar .days li.inactive {
+    color: #aaa !important; /* Solğun boz */
+}
+
+@media screen and (max-width: 768px) {
+  .wrapper, .calendar-box {
+    width: 100% !important; /* Tam ekran genişliyi */
+    padding: 15px; /* Kənarlardan boşluq */
+    margin: 0 auto;
+  }
+
+  /* Rəqəmlərin ölçüsünü telefonda biraz kiçildək ki, yerləşsin */
+  .calendar .days li,
+  .calendar .weeks li {
+    font-size: 14px; /* Standart ölçüdən biraz kiçik */
+    width: calc(100% / 7); /* Dəqiq 7 yerə bölünsün */
+  }
+  
+  .calendar header {
+    padding: 10px 0;
+  }
+}
