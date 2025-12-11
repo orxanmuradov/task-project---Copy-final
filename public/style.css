@@ -383,3 +383,35 @@ li.task-overdue { border-left-color: var(--danger) !important; background: rgba(
 .subtask-btn i {
     font-size: 1.1rem;
 }
+
+
+
+/* "Yadda Saxla" Düyməsi (Edit Panelində) */
+.save-btn-small {
+    background-color: var(--primary-color); /* Parlaq Sarı */
+    color: #000; /* Qara yazı */
+    border: none;
+    padding: 12px; /* Alt tapşırıq düyməsi ilə eyni hündürlükdə olsun */
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px; /* Yuxarıdakı düymədən biraz aralı olsun */
+    
+    /* Animasiya və Kölgə */
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(255, 204, 0, 0.2);
+}
+
+/* Üzərinə gələndə */
+.save-btn-small:hover {
+    background-color: var(--primary-hover); /* Bir az tündləşsin */
+    transform: translateY(-2px); /* Yüngülcə yuxarı qalxsın */
+    box-shadow: 0 6px 15px rgba(255, 204, 0, 0.3);
+}
+
+/* Basılanda */
+.save-btn-small:active {
+    transform: scale(0.98);
+}
