@@ -9,93 +9,80 @@
 
     document.getElementById("logout-btn").addEventListener("click", () => { localStorage.clear(); window.location.href = "login.html"; });
 
+    // --- YENİ TARİX FORMATI (GÜN + SAAT) ---
     function formatDateAZ(dateString) {
         if (!dateString) return "";
         const date = new Date(dateString);
-        return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short', year: 'numeric' });
+        // Format: 12 Dek 2025, 14:30
+        return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short', year: 'numeric' }) + 
+               ", " + 
+               date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // ===============================================
-    // 🔔 YENİ: BİLDİRİŞ (NOTIFICATION) SİSTEMİ 🔔
-    // ===============================================
-    
-    // 1. İcazə istəyirik
-    if ("Notification" in window) {
-        if (Notification.permission !== "granted") {
-            Notification.requestPermission();
-        }
+    // --- BİLDİRİŞ SİSTEMİ (GÜCLƏNDİRİLMİŞ) ---
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
     }
 
-    // 2. Yoxlama Funksiyası (Tasks & Checklists)
     async function checkDeadlines() {
         if (Notification.permission !== "granted") return;
 
-        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const oneDayMs = 24 * 60 * 60 * 1000; // 24 saat
         const notifiedItems = JSON.parse(localStorage.getItem("notifiedItems") || "[]");
 
-        // --- TAPŞIRIQLARI YOXLAYIRIQ ---
+        // Helper: Vaxt yoxlanışı
+        const checkItem = (itemDate, title, idPrefix) => {
+            if (!itemDate) return;
+            const due = new Date(itemDate);
+            const diff = due - now;
+            const uniqueKey = `${idPrefix}-${itemDate}`;
+
+            if (notifiedItems.includes(uniqueKey)) return;
+
+            // 1. Gecikibsə
+            if (diff < 0) {
+                sendNotification("⚠️ Gecikmə!", `"${title}" vaxtı bitib!`);
+                notifiedItems.push(uniqueKey);
+            } 
+            // 2. 1 Gündən az qalıbsa (Xəbərdarlıq)
+            else if (diff <= oneDayMs) {
+                sendNotification("⏳ Az Qalıb!", `"${title}" bitməsinə 24 saatdan az qalıb!`);
+                notifiedItems.push(uniqueKey);
+            }
+        };
+
+        // Tasks
         if (allTasksCache.length > 0) {
             allTasksCache.forEach(task => {
-                // Əgər bitməyibsə VƏ (tarix bu gündürsə VƏ YA gecikibsə)
-                if (task.status !== 'completed' && task.due_date && task.due_date <= today) {
-                    const uniqueKey = `task-${task.id}-${today}`; // Bu gün üçün xatırlatdım?
-                    
-                    if (!notifiedItems.includes(uniqueKey)) {
-                        sendNotification("📅 Tapşırıq Xatırlatması!", `"${task.title}" tapşırığının vaxtı çatıb və ya gecikir!`);
-                        notifiedItems.push(uniqueKey);
-                    }
-                }
+                if (task.status !== 'completed') checkItem(task.due_date, task.title, `task-${task.id}`);
             });
         }
 
-        // --- HƏDƏFLƏRİ (CHECKLIST) YOXLAYIRIQ ---
-        // (Bunun üçün qeydləri yenidən çəkmək lazımdır ki, aktual olsun)
+        // Checklist
         try {
             const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
             const data = await res.json();
             if (data.notes) {
                 data.notes.filter(n => n.type === 'checklist').forEach(note => {
-                    let items = [];
-                    try { items = JSON.parse(note.content || '[]'); } catch(e) {}
-                    
+                    let items = []; try { items = JSON.parse(note.content || '[]'); } catch(e) {}
                     items.forEach((item, index) => {
-                        if (!item.done && item.endDate && item.endDate <= today) {
-                            const uniqueKey = `check-${note.id}-${index}-${today}`;
-                            
-                            if (!notifiedItems.includes(uniqueKey)) {
-                                sendNotification("⚠️ Hədəf Xatırlatması!", `"${item.text}" hədəfinin vaxtı bitib!`);
-                                notifiedItems.push(uniqueKey);
-                            }
-                        }
+                        if (!item.done) checkItem(item.endDate, item.text, `check-${note.id}-${index}`);
                     });
                 });
             }
         } catch(e) {}
 
-        // Siyahını yaddaşa yaz (Təkrar olmasın deyə)
         localStorage.setItem("notifiedItems", JSON.stringify(notifiedItems));
     }
-
-    // 3. Bildiriş Göndərən Helper
+    
     function sendNotification(title, body) {
-        const notification = new Notification(title, {
-            body: body,
-            icon: "https://cdn-icons-png.flaticon.com/512/3239/3239952.png" // Zəng ikonu
-        });
-        
-        // Klikləyəndə sayta gəlsin
-        notification.onclick = () => {
-            window.focus();
-        };
+        const n = new Notification(title, { body: body, icon: "https://cdn-icons-png.flaticon.com/512/3239/3239952.png" });
+        n.onclick = () => window.focus();
     }
+    setInterval(checkDeadlines, 60000); // Hər dəqiqə yoxla
 
-    // 4. Hər 1 dəqiqədən bir yoxla (60000 ms)
-    setInterval(checkDeadlines, 60000);
-    // Səhifə açılanda da bir dəfə yoxla
-    setTimeout(checkDeadlines, 3000); 
-
-    // ===============================================
-
+    // --- TABS ---
     window.switchTab = (tabName) => {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(view => view.style.display = 'none');
@@ -141,17 +128,22 @@
     
     window.deleteCategory = (id, name) => { showConfirm(`"${name}" kateqoriyasını silmək istəyirsən?`, async () => { const res = await fetch(`/api/categories/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }); if(res.ok) { await loadCategories(); await loadTasks(); categorySelect.value="general"; newCatContainer.style.display="none"; } }); };
 
+    // --- TASK ADD (DATETIME-LOCAL İLƏ) ---
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         let title = document.getElementById("task-input").value; 
         let category = categorySelect.value;
+        // YENİ: Dəyərləri birbaşa götür (YYYY-MM-DDTHH:MM formatında gəlir)
         let startDate = document.getElementById("task-start-date").value;
         let dueDate = document.getElementById("task-due-date").value;
+        
         if (category === "new_category") { const newCat = newCatInput.value.trim(); if(!newCat) return; const r = await fetch("/api/categories", { method:"POST", headers:{"Content-Type":"application/json", "Authorization":`Bearer ${token}`}, body:JSON.stringify({name:newCat}) }); if(r.ok) { await loadCategories(); category=newCat.toLowerCase(); categorySelect.value=category; newCatContainer.style.display="none"; newCatInput.value=""; } else return; }
+        
         const res = await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ title, category, description:"", start_date: startDate || null, due_date: dueDate || null, parent_id:null }) });
         if (res.ok) { document.getElementById("task-input").value=""; document.getElementById("task-start-date").value=""; document.getElementById("task-due-date").value=""; loadTasks(); }
     });
 
+    // --- TASK LOAD ---
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -186,18 +178,38 @@
 
     function translate(text) { const dict = { 'General': 'Ümumi', 'Work': 'İş', 'Home': 'Ev', 'Shopping': 'Alış-veriş' }; return dict[text] || text; }
 
+    // ============================================
+    // 👇 TASK RENDER (GECİKMƏ VƏ XƏBƏRDARLIQ) 👇
+    // ============================================
     function renderTask(task, listElement, isChild) {
         const li = document.createElement("li"); li.id = `task-${task.id}`; 
         if(task.status==='completed') li.classList.add('completed'); 
         if(isChild) li.classList.add('sub-task-item');
+        
         let dateText = "";
         if (task.start_date && task.due_date) dateText = `${formatDateAZ(task.start_date)} - ${formatDateAZ(task.due_date)}`;
         else if (task.due_date) dateText = `Son: ${formatDateAZ(task.due_date)}`;
         else if (task.start_date) dateText = `Baş: ${formatDateAZ(task.start_date)}`;
-        const today = new Date().toISOString().split('T')[0];
-        let isOverdue = false;
-        if (task.status !== 'completed' && task.due_date && task.due_date < today) { isOverdue = true; li.classList.add('task-overdue'); }
-        let overdueBadge = isOverdue ? `<span class="task-overdue-badge"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>` : "";
+
+        const now = new Date();
+        let statusBadge = "";
+        
+        if (task.status !== 'completed' && task.due_date) {
+            const due = new Date(task.due_date);
+            const diff = due - now;
+            const oneDayMs = 24 * 60 * 60 * 1000;
+
+            if (diff < 0) {
+                // Gecikib
+                li.classList.add('task-overdue');
+                statusBadge = `<span class="task-overdue-badge"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
+            } else if (diff <= oneDayMs) {
+                // 1 Gündən az qalıb
+                li.classList.add('task-warning');
+                statusBadge = `<span class="badge-warning"><i class="fas fa-stopwatch"></i> Az qalıb!</span>`;
+            }
+        }
+
         let recurDisplay = task.recurrence ? `<span class="recurrence-tag"><i class="fas fa-sync-alt"></i> ${translateRecurrence(task.recurrence)}</span>` : "";
         const descText = task.description ? task.description : `<span style="opacity:0.5;font-style:italic;">📝 Detallar...</span>`;
         let subtaskBadge = "";
@@ -210,7 +222,7 @@
                 subtaskBadge = `<span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid ${badgeColor}; color: ${badgeColor}; padding: 2px 6px; border-radius: 12px; margin-left: 8px; font-weight: bold;"><i class="fas fa-stream"></i> ${completedCount}/${totalCount}</span>`;
             }
         }
-        li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title} ${subtaskBadge} ${overdueBadge}</strong><div class="task-meta">${dateText ? `<i class="far fa-calendar-alt"></i> <span style="margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
+        li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title} ${subtaskBadge} ${statusBadge}</strong><div class="task-meta">${dateText ? `<i class="far fa-calendar-alt"></i> <span style="margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
         listElement.appendChild(li);
     }
     
@@ -218,7 +230,15 @@
     window.toggleAccordion = (id) => { document.getElementById(`task-${id}`).classList.toggle("active"); const subList = document.getElementById(`subtasks-${id}`); if (subList) { subList.style.display = subList.style.display === "block" ? "none" : "block"; } };
     window.deleteTask = (id) => { showConfirm("Bu tapşırığı silmək istəyirsən?", async () => { await fetch(`/api/tasks/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadTasks(); }); };
     window.toggleStatus = async (id,s,r,t,c) => { const ns=s==='completed'?'pending':'completed'; if(ns==='pending' && r && r!=='null'){ let nextDate=new Date(); if(r==='daily')nextDate.setDate(nextDate.getDate()+1);if(r==='weekly')nextDate.setDate(nextDate.getDate()+7);if(r==='monthly')nextDate.setMonth(nextDate.getMonth()+1); await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({title:t,category:c,description:"",due_date:nextDate.toISOString().split('T')[0],recurrence:r,parent_id:null})}); } await fetch(`/api/tasks/${id}/status`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({status:ns})}); loadTasks(); };
-    window.editDescription = (e,id,t,start,due,r,re) => { e.stopPropagation(); const box=document.getElementById(`desc-box-${id}`); if(box.querySelector("textarea")) return; box.innerHTML = `<div class="edit-container" onclick="event.stopPropagation()"><div class="sticky-edit-header"><div class="extra-options"><div class="date-group"><label>Başlanğıc:</label><input type="date" id="input-start-${id}" value="${start}" class="small-input"></div><div class="date-group"><label>Son Tarix:</label><input type="date" id="input-due-${id}" value="${due}" class="small-input"></div><div class="date-group"><label>Təkrar:</label><select id="input-recur-${id}" class="small-select"><option value="">Yox</option><option value="daily" ${r==='daily'?'selected':''}>Hər Gün</option><option value="weekly" ${r==='weekly'?'selected':''}>Həftəlik</option></select></div></div><button class="subtask-btn" onclick="openSubtaskModal(${id})"><i class="fas fa-level-down-alt"></i> Alt Tapşırıq Əlavə Et</button></div><textarea class="edit-textarea" id="input-desc-${id}">${box.innerText.includes("Detallar")?"":box.innerText}</textarea><div class="edit-footer"><button class="save-btn-small" onclick="saveDescription(${id},'${t}')">Yadda Saxla</button></div></div>`; };
+    
+    // YENİLƏNMİŞ EDIT PANELİ (SAATLI INPUTLAR)
+    window.editDescription = (e,id,t,start,due,r,re) => { 
+        e.stopPropagation(); const box=document.getElementById(`desc-box-${id}`); if(box.querySelector("textarea")) return; 
+        
+        // Tarixləri datetime-local üçün uyğun formata salmaq lazımdır (YYYY-MM-DDTHH:MM)
+        // Verilənlər bazasında adətən bu formatda olur, amma yoxlamaq yaxşıdır.
+        box.innerHTML = `<div class="edit-container" onclick="event.stopPropagation()"><div class="sticky-edit-header"><div class="extra-options"><div class="date-group"><label>Başlanğıc:</label><input type="datetime-local" id="input-start-${id}" value="${start}" class="small-input"></div><div class="date-group"><label>Son Tarix:</label><input type="datetime-local" id="input-due-${id}" value="${due}" class="small-input"></div><div class="date-group"><label>Təkrar:</label><select id="input-recur-${id}" class="small-select"><option value="">Yox</option><option value="daily" ${r==='daily'?'selected':''}>Hər Gün</option><option value="weekly" ${r==='weekly'?'selected':''}>Həftəlik</option></select></div></div><button class="subtask-btn" onclick="openSubtaskModal(${id})"><i class="fas fa-level-down-alt"></i> Alt Tapşırıq Əlavə Et</button></div><textarea class="edit-textarea" id="input-desc-${id}">${box.innerText.includes("Detallar")?"":box.innerText}</textarea><div class="edit-footer"><button class="save-btn-small" onclick="saveDescription(${id},'${t}')">Yadda Saxla</button></div></div>`; 
+    };
     window.saveDescription = async (id,t) => { const d=document.getElementById(`input-desc-${id}`).value; const start=document.getElementById(`input-start-${id}`).value; const due=document.getElementById(`input-due-${id}`).value; const r=document.getElementById(`input-recur-${id}`).value; await fetch(`/api/tasks/${id}`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,description:d,start_date:start?start:null,due_date:due?due:null,recurrence:r?r:null})}); loadTasks(); };
     window.addSubtask = async (pid) => { const t=prompt("Alt tapşırıq:"); if(t) { await fetch("/api/tasks", {method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,category:"general",description:"",parent_id:pid})}); loadTasks(); } };
 
@@ -246,6 +266,9 @@
         if (checklistNotes.length > 0) { const s = document.createElement("div"); s.style.marginTop = "30px"; s.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; checklistNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); } 
     }
 
+    // ============================================
+    // 👇 CHECKLIST RENDER (SAAT + XƏBƏRDARLIQ) 👇
+    // ============================================
     function createNoteCard(note){
         const div=document.createElement("div");div.className="note-card";
         let hh=`<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
@@ -255,33 +278,40 @@
             ch=`<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;
         }else{
             let items=[];try{items=JSON.parse(note.content||'[]');}catch(e){items=[];} 
-            const today=new Date().toISOString().split('T')[0];
+            const now=new Date();
+            const oneDayMs = 24 * 60 * 60 * 1000;
             
             const renderedItems=items.map((item,index)=>{
                 const isDone=item.done;
-                // Gecikmə Yoxlanışı (Ciddi)
-                const isOverdue = !isDone && item.endDate && item.endDate < today;
                 
                 let wrapperClass="checklist-item-wrapper";
                 let badge="";
                 
-                if(isDone) wrapperClass+=" done";
-                if(isOverdue) {
-                    wrapperClass+=" overdue"; 
-                    badge=`<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
+                if(isDone) {
+                    wrapperClass+=" done";
+                } else if (item.endDate) {
+                    const due = new Date(item.endDate);
+                    const diff = due - now;
+
+                    if(diff < 0) {
+                        wrapperClass+=" overdue"; 
+                        badge=`<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
+                    } else if (diff <= oneDayMs) {
+                        wrapperClass+=" warning"; // Yeni narıncı stil
+                        badge=`<span class="badge-warning"><i class="fas fa-stopwatch"></i> Az qalıb!</span>`;
+                    }
                 }
                 
+                // INPUT TİPİNİ DƏYİŞDİK: datetime-local
                 const html=`<div class="${wrapperClass}">
-                    <div class="checklist-main-row"><input type="checkbox" ${isDone?'checked':''} onchange="updateChecklistItem(${note.id},${index},'done',this.checked)"><span style="flex:1;">${item.text}</span>${badge}<button onclick="removeChecklistItem(${note.id},${index})" class="delete-sub-btn"><i class="fas fa-trash"></i></button></div><div class="checklist-details-row"><div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div><div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div></div><input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)"></div>`;
+                    <div class="checklist-main-row"><input type="checkbox" ${isDone?'checked':''} onchange="updateChecklistItem(${note.id},${index},'done',this.checked)"><span style="flex:1;">${item.text}</span>${badge}<button onclick="removeChecklistItem(${note.id},${index})" class="delete-sub-btn"><i class="fas fa-trash"></i></button></div><div class="checklist-details-row"><div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="datetime-local" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div><div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="datetime-local" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div></div><input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)"></div>`;
                 return{html,isDone};
             });
             
             const activeHtml=renderedItems.filter(i=>!i.isDone).map(i=>i.html).join('');
             const doneHtml=renderedItems.filter(i=>i.isDone).map(i=>i.html).join('');
-            
             let finalHtml=activeHtml;
             if(doneHtml){finalHtml+=`<div class="completed-divider"><span>✅ Tamamlanmış Hədəflər</span></div>`+doneHtml;}
-            
             ch=`<div class="checklist-container">${finalHtml}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;
         }
         div.innerHTML=hh+ch;return div;
@@ -290,19 +320,16 @@
     window.deleteNote = (id) => { showConfirm("Bu qeydi silmək istəyirsən?", async () => { await fetch(`/api/notes/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadNotes(); }); };
     window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; 
     window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; 
-    
     window.updateChecklistItem=async(id,idx,f,v)=>{
         const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});
         const d=await r.json();
         const n=d.notes.find(x=>x.id===id);
         let i=JSON.parse(n.content||'[]');
-        
         if(i[idx]){
             i[idx][f]=v;
             await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});
             loadNotes(); 
         }
     }; 
-    
     window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
 });
