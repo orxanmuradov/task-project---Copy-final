@@ -81,29 +81,21 @@
         }
     });
 
-    // --- TASK LOAD (Gizli Subtasklar) ---
+    // --- TASK LOAD ---
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
         allTasksCache = data.tasks || [];
         const container = document.getElementById("tasks-container");
-        if (!container) return; 
-        container.innerHTML = "";
+        if (!container) return; container.innerHTML = "";
 
-        if (!allTasksCache || allTasksCache.length === 0) { 
-            container.innerHTML = "<p style='text-align:center; color:#555; margin-top:20px;'>Hələ tapşırıq yoxdur.</p>"; 
-            return; 
-        }
+        if (!allTasksCache || allTasksCache.length === 0) { container.innerHTML = "<p style='text-align:center; color:#555; margin-top:20px;'>Hələ tapşırıq yoxdur.</p>"; return; }
 
         const parents = allTasksCache.filter(t => !t.parent_id);
         const children = allTasksCache.filter(t => t.parent_id);
 
         const grouped = {};
-        parents.forEach(task => { 
-            const catKey = (task.category || 'general').toLowerCase(); 
-            if (!grouped[catKey]) grouped[catKey] = []; 
-            grouped[catKey].push(task); 
-        });
+        parents.forEach(task => { const catKey = (task.category || 'general').toLowerCase(); if (!grouped[catKey]) grouped[catKey] = []; grouped[catKey].push(task); });
 
         Object.keys(grouped).forEach(catKey => {
             const tasksInGroup = grouped[catKey];
@@ -117,9 +109,7 @@
                     renderTask(parent, ul, false);
                     const myChildren = children.filter(c => c.parent_id === parent.id);
                     if (myChildren.length > 0) {
-                        const subUl = document.createElement("ul");
-                        subUl.className = "subtask-container";
-                        subUl.id = `subtasks-${parent.id}`;
+                        const subUl = document.createElement("ul"); subUl.className = "subtask-container"; subUl.id = `subtasks-${parent.id}`;
                         myChildren.forEach(child => renderTask(child, subUl, true));
                         ul.appendChild(subUl);
                     }
@@ -131,20 +121,34 @@
 
     function translate(text) { const dict = { 'General': 'Ümumi', 'Work': 'İş', 'Home': 'Ev', 'Shopping': 'Alış-veriş' }; return dict[text] || text; }
 
+    // =======================================================
+    // 👇 RENDER TASK (GECİKMƏ MƏNTİQİ BURADADIR) 👇
+    // =======================================================
     function renderTask(task, listElement, isChild) {
         const li = document.createElement("li"); 
         li.id = `task-${task.id}`; 
         if(task.status==='completed') li.classList.add('completed'); 
         if(isChild) li.classList.add('sub-task-item');
         
+        // --- TARİX VƏ GECİKMƏ YOXLANIŞI ---
+        const today = new Date().toISOString().split('T')[0];
+        let isOverdue = false;
+        
+        // Şərt: Bitməyib + Tarixi var + Tarix bu gündən əvvəldir
+        if (task.status !== 'completed' && task.due_date && task.due_date < today) {
+            isOverdue = true;
+            li.classList.add('task-overdue'); // CSS classı əlavə et
+        }
+
         let dateText = "";
-        if (task.start_date && task.due_date) dateText = `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.start_date)} - ${formatDateAZ(task.due_date)}`;
-        else if (task.due_date) dateText = `<i class="far fa-calendar-alt"></i> Son: ${formatDateAZ(task.due_date)}`;
-        else if (task.start_date) dateText = `<i class="far fa-calendar-alt"></i> Baş: ${formatDateAZ(task.start_date)}`;
+        if (task.start_date && task.due_date) dateText = `${formatDateAZ(task.start_date)} - ${formatDateAZ(task.due_date)}`;
+        else if (task.due_date) dateText = `Son: ${formatDateAZ(task.due_date)}`;
+        else if (task.start_date) dateText = `Baş: ${formatDateAZ(task.start_date)}`;
 
         let recurDisplay = task.recurrence ? `<span class="recurrence-tag"><i class="fas fa-sync-alt"></i> ${translateRecurrence(task.recurrence)}</span>` : "";
         const descText = task.description ? task.description : `<span style="opacity:0.5;font-style:italic;">📝 Detallar...</span>`;
         
+        // Alt tapşırıq sayğacı
         let subtaskBadge = "";
         if (!isChild) {
             const mySubtasks = allTasksCache.filter(t => t.parent_id === task.id);
@@ -156,7 +160,32 @@
             }
         }
 
-        li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title} ${subtaskBadge}</strong><div class="task-meta">${dateText ? `<span style="color:#ffcc00; margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
+        // Gecikmə işarəsi
+        let overdueBadge = "";
+        if (isOverdue) {
+            overdueBadge = `<span class="task-overdue-badge"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
+        }
+
+        li.innerHTML = `
+            <div class="task-header">
+                <div class="task-info" onclick="toggleAccordion(${task.id})">
+                    <strong>
+                        ${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} 
+                        ${task.title} 
+                        ${subtaskBadge}
+                        ${overdueBadge}
+                    </strong>
+                    <div class="task-meta">
+                        ${dateText ? `<i class="far fa-calendar-alt"></i> <span style="margin-right:5px;">${dateText}</span>` : ''} 
+                        ${recurDisplay}
+                    </div>
+                </div>
+                <div class="actions">
+                    <button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button>
+                    <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
         listElement.appendChild(li);
     }
     
@@ -186,76 +215,11 @@
         if (textNotes.length > 0) { const s = document.createElement("div"); s.innerHTML = `<h3 class="note-section-title">📝 Qeydlər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; textNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); }
         if (checklistNotes.length > 0) { const s = document.createElement("div"); s.style.marginTop = "30px"; s.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; checklistNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); } 
     }
-
-    // ===============================================
-    // 👇 YENİ: CREATE NOTE CARD (TƏKMİL) 👇
-    // ===============================================
-    function createNoteCard(note) {
-        const div = document.createElement("div");
-        div.className = "note-card";
-        let hh = `<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
-        let ch = "";
-        
-        if (note.type === 'text') {
-            ch = `<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;
-        } else {
-            let items = [];
-            try { items = JSON.parse(note.content || '[]'); } catch (e) { items = []; }
-            
-            // Bu günün tarixi (YYYY-MM-DD)
-            const today = new Date().toISOString().split('T')[0];
-
-            // Render prosesi: Elementləri yaradıb sıralamaq üçün
-            // İndekslər pozulmasın deyə olduğu kimi render edirik, sadəcə sonra HTML-i filterləyəcəyik.
-            
-            const renderedItems = items.map((item, index) => {
-                const isDone = item.done;
-                // Gecikmə Yoxlanışı: Bitməyib + Bitmə tarixi var + Tarix keçib
-                const isOverdue = !isDone && item.endDate && item.endDate < today;
-                
-                let wrapperClass = "checklist-item-wrapper";
-                let badge = "";
-
-                if (isDone) wrapperClass += " done";
-                if (isOverdue) {
-                    wrapperClass += " overdue"; // Qırmızı rəng
-                    badge = `<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
-                }
-
-                const html = `
-                    <div class="${wrapperClass}">
-                        <div class="checklist-main-row">
-                            <input type="checkbox" ${isDone ? 'checked' : ''} onchange="updateChecklistItem(${note.id}, ${index}, 'done', this.checked)">
-                            <span style="flex:1;">${item.text}</span>
-                            ${badge}
-                            <button onclick="removeChecklistItem(${note.id}, ${index})" class="delete-sub-btn">&times;</button>
-                        </div>
-                        <div class="checklist-details-row">
-                            <div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div>
-                            <div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div>
-                            <input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)" style="margin-top:10px;">
-                        </div>
-                    </div>`;
-                return { html, isDone };
-            });
-
-            // Aktiv və Bitmişləri Ayırırıq
-            const activeHtml = renderedItems.filter(i => !i.isDone).map(i => i.html).join('');
-            const doneHtml = renderedItems.filter(i => i.isDone).map(i => i.html).join('');
-
-            let finalHtml = activeHtml;
-            // Əgər bitmiş varsa, onları aşağıda göstər
-            if (doneHtml) {
-                finalHtml += `<div class="completed-divider"><span>Tamamlananlar</span></div>` + doneHtml;
-            }
-
-            ch = `<div class="checklist-container">${finalHtml}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;
-        }
-        div.innerHTML = hh + ch;
-        return div;
-    }
-
-    window.deleteNote=async(id)=>{if(!confirm("Silmək?"))return;await fetch(`/api/notes/${id}`,{method:"DELETE",headers:{"Authorization":`Bearer ${token}`}});loadNotes();}; window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; 
-    window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; 
-    window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});if(f==='done')loadNotes();}}; window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
+    function createNoteCard(note){const div=document.createElement("div");div.className="note-card";let hh=`<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;let ch="";if(note.type==='text'){ch=`<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;}else{let items=[];try{items=JSON.parse(note.content||'[]');}catch(e){items=[];} 
+    const today=new Date().toISOString().split('T')[0];
+    const renderedItems=items.map((item,index)=>{const isDone=item.done;const isOverdue=!isDone&&item.endDate&&item.endDate<today;let wrapperClass="checklist-item-wrapper";let badge="";if(isDone)wrapperClass+=" done";if(isOverdue){wrapperClass+=" overdue";badge=`<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;}
+    const html=`<div class="${wrapperClass}"><div class="checklist-main-row"><input type="checkbox" ${isDone?'checked':''} onchange="updateChecklistItem(${note.id},${index},'done',this.checked)"><span style="flex:1;">${item.text}</span>${badge}<button onclick="removeChecklistItem(${note.id},${index})" class="delete-sub-btn">&times;</button></div><div class="checklist-details-row"><div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div><div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div><input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)" style="margin-top:10px;"></div></div>`;return{html,isDone};});
+    const activeHtml=renderedItems.filter(i=>!i.isDone).map(i=>i.html).join('');const doneHtml=renderedItems.filter(i=>i.isDone).map(i=>i.html).join('');let finalHtml=activeHtml;if(doneHtml){finalHtml+=`<div class="completed-divider"><span>Tamamlananlar</span></div>`+doneHtml;}
+    ch=`<div class="checklist-container">${finalHtml}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;} div.innerHTML=hh+ch;return div;}
+    window.deleteNote=async(id)=>{if(!confirm("Silmək?"))return;await fetch(`/api/notes/${id}`,{method:"DELETE",headers:{"Authorization":`Bearer ${token}`}});loadNotes();}; window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});if(f==='done')loadNotes();}}; window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
 });

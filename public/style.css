@@ -1078,3 +1078,23 @@ input[type="date"] {
     50% { opacity: 0.6; }
     100% { opacity: 1; }
 }
+
+
+/* =========================================
+   TASK GECİKMƏ DİZAYNI
+   ========================================= */
+
+/* Tapşırıq gecikibsə (Siyahı elementi) */
+li.task-overdue {
+    border-left-color: #ff4d4d !important; /* Sol tərəfi qırmızı et */
+    background: rgba(255, 77, 77, 0.08); /* Çox yüngül qırmızı fon */
+}
+
+/* Gecikmə yazısı (Badge) */
+.task-overdue-badge {
+    color: #ff4d4d;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: 10px;
+    animation: pulse 2s infinite;
+}
