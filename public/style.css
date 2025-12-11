@@ -246,3 +246,64 @@ li.active .task-desc { display: block; animation: fadeIn 0.3s; }
     color: #000 !important;
     border-color: #FFC107 !important;
 }
+
+/* --- QƏTİ HƏLL YOLU (Ultimate Fix) --- */
+
+/* 1. Brauzerə əmr edirik: Tarix/Vaxt pəncərələrini "Açıq" (Light) rejimdə aç */
+/* Bu kod mobil brauzerin açdığı standart pəncərədəki yazıları qara edir */
+:root {
+    color-scheme: light dark; /* Hər iki rejimi dəstəklədiyini bildiririk */
+}
+
+input[type="date"], 
+input[type="time"], 
+input[type="datetime-local"] {
+    color-scheme: light !important; /* Kalendar pəncərəsi məcburi AĞ rejimdə olsun */
+    color: #000 !important; /* İnputun daxilindəki yazı qara */
+    background-color: #fff !important; /* İnputun fonu ağ */
+}
+
+/* 2. Əgər bu Materialize və ya oxşar kitabxanadırsa */
+/* Modal (pəncərə) açılan kimi içindəki bütün yazıları qara edirik */
+
+.modal, 
+.modal-content, 
+.datepicker-modal, 
+.timepicker-modal,
+.picker,
+.picker__holder,
+.picker__frame {
+    color: #000 !important;
+    background-color: #fff !important;
+}
+
+/* Pəncərənin içindəki istənilən yazı elementini hədəfləyirik */
+.modal span, 
+.modal div, 
+.modal p, 
+.picker__select-year,
+.picker__day {
+    color: #000 !important;
+}
+
+/* Təkərlər (Scroll olunan rəqəmlər) */
+.picker__list-item,
+.picker__list {
+    color: #000 !important;
+}
+
+/* Seçilən gün və ya rəqəm */
+.picker__day--selected, 
+.picker__day--today,
+.datepicker-day-button:focus {
+    color: #000 !important;
+    background-color: #FFC107 !important; /* Sənin Sarı rəngin */
+    font-weight: bold !important;
+}
+
+/* Aşağıdakı Düymələr (Təmizlə, Ləğv et) */
+.modal-footer .btn-flat,
+.picker__footer button {
+    color: #1a73e8 !important; /* Standart göy rəng */
+    font-weight: bold !important;
+}
