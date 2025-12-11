@@ -212,3 +212,56 @@
     window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes(); }}; 
     window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
 });
+
+/* --- KALENDAR RƏNGİNİ MƏCBURİ DƏYİŞƏN KOD (YAMAQ) --- */
+setInterval(() => {
+    // Kalendarın ola biləcəyi bütün class adlarını yoxlayırıq
+    const calendarContainers = document.querySelectorAll('.wrapper, .calendar-box, .calendar-container');
+
+    calendarContainers.forEach(container => {
+        // Konteynerin arxa fonunu AĞ edirik
+        container.style.backgroundColor = "#ffffff";
+        container.style.color = "#000000";
+
+        // Kalendarın içindəki BÜTÜN yazıların rəngini qara edirik
+        const allText = container.querySelectorAll('h1, h2, h3, h4, p, span, li, div');
+        allText.forEach(element => {
+            // Əgər element "active" (seçilmiş gün) deyilsə, rəngini qara et
+            if (!element.classList.contains('active')) {
+                element.style.color = "#000000";
+                element.style.textShadow = "none"; // Kölgə varsa sil
+            }
+        });
+
+        // Həftənin günləri (B.E, Ç.A və s.)
+        const weekDays = container.querySelectorAll('.weeks li');
+        weekDays.forEach(li => {
+            li.style.color = "#333333";
+            li.style.fontWeight = "bold";
+        });
+
+        // Tarixlər (Rəqəmlər)
+        const days = container.querySelectorAll('.days li');
+        days.forEach(li => {
+            // Passiv günlər (boz)
+            if (li.classList.contains('inactive')) {
+                li.style.color = "#cccccc";
+            } 
+            // Aktiv gün (Göy fon, Ağ yazı)
+            else if (li.classList.contains('active')) {
+                li.style.color = "#ffffff";
+                li.style.backgroundColor = "#6C63FF"; 
+            } 
+            // Adi günlər (Qara)
+            else {
+                li.style.color = "#000000";
+            }
+        });
+        
+        // Mobil üçün ikonlar (oxlar)
+        const icons = container.querySelectorAll('.icons span, .icons i');
+        icons.forEach(icon => {
+            icon.style.color = "#000000";
+        });
+    });
+}, 1000); // Hər 1 saniyədən bir rəngləri yeniləyir
