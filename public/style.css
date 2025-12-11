@@ -192,3 +192,57 @@ li.active .task-desc { display: block; animation: fadeIn 0.3s; }
     .container { border-radius: 0; border: none; height: 100dvh; }
     .form-row, .date-row, .checklist-details-row, .extra-options { flex-direction: column; gap: 8px; }
 }
+
+
+/* --- Kalendar (Flatpickr) Rəng Düzəlişi --- */
+
+/* Kalendarın ümumi konteynerində yazı rəngini qara edirik */
+.flatpickr-calendar, 
+.flatpickr-days, 
+.flatpickr-weekdays, 
+.flatpickr-rContainer {
+    color: #333 !important;
+}
+
+/* Günlərin rəqəmləri */
+.flatpickr-day {
+    color: #333 !important;
+}
+
+/* Ay və İl yazısı (məs: Dekabr 2025) */
+.flatpickr-current-month .cur-month,
+.flatpickr-current-month input.cur-year {
+    color: #000 !important;
+    font-weight: bold !important;
+}
+
+/* Saat hissəsi (məs: 18:05) */
+.flatpickr-time input,
+.flatpickr-time .flatpickr-am-pm {
+    color: #000 !important;
+}
+
+/* Ox işarələri (Ayı dəyişmək üçün) */
+.flatpickr-month .flatpickr-prev-month svg, 
+.flatpickr-month .flatpickr-next-month svg {
+    fill: #000 !important;
+}
+
+/* --- Seçilən günü sənin dizaynına uyğunlaşdıraq --- */
+/* Hazırda seçili olan gün (Sarı fon, qara yazı) */
+.flatpickr-day.selected, 
+.flatpickr-day.startRange, 
+.flatpickr-day.endRange, 
+.flatpickr-day.selected.inRange, 
+.flatpickr-day.startRange.inRange, 
+.flatpickr-day.endRange.inRange, 
+.flatpickr-day.selected:focus, 
+.flatpickr-day.startRange:focus, 
+.flatpickr-day.endRange:focus, 
+.flatpickr-day.selected:hover, 
+.flatpickr-day.startRange:hover, 
+.flatpickr-day.endRange:hover {
+    background: #FFC107 !important; /* Sənin saytın sarı rəngi */
+    color: #000 !important;
+    border-color: #FFC107 !important;
+}
