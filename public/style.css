@@ -1,4 +1,4 @@
-/* =========================================
+ /* =========================================
    ÜMUMİ SİTİL (Sarı & Qara)
    ========================================= */
 :root {
@@ -24,7 +24,7 @@ body {
     color: var(--text-light);
     display: flex;
     justify-content: center;
-    align-items: center; /* Mərkəzləşdirmə */
+    align-items: flex-start; /* Yuxarıdan başlasın */
     min-height: 100vh;
     padding: 20px;
 }
@@ -33,11 +33,12 @@ body {
 .container {
     background-color: var(--bg-card);
     width: 100%;
-    max-width: 500px; /* Kompüterdə maksimum bu qədər olsun */
+    max-width: 600px; /* Kompüterdə maksimum en */
     padding: 2rem;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     border: 1px solid #333;
+    transition: all 0.3s ease;
 }
 
 /* Header */
@@ -48,6 +49,8 @@ body {
     margin-bottom: 20px;
     border-bottom: 2px solid var(--primary-color);
     padding-bottom: 15px;
+    flex-wrap: wrap; /* Mobildə sığmayanda aşağı atsın */
+    gap: 10px;
 }
 
 .main-title {
@@ -75,371 +78,7 @@ body {
 }
 #logout-btn:hover { background: var(--danger); }
 
-/* --- FORM (Task əlavə etmə) --- */
-#task-form {
-    background: #252525;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.form-row {
-    display: flex;
-    gap: 10px; /* Inputlar arasındakı məsafə */
-}
-
-input, select {
-    background-color: #333;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 1rem;
-    outline: none;
-    width: 100%;
-}
-
-input:focus, select:focus {
-    border-color: var(--primary-color);
-}
-
-/* Yeni Kateqoriya Inputu */
-#new-cat-input {
-    background: #252525;
-    border: 2px solid var(--primary-color);
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    width: 100%;
-    margin-top: 5px;
-    animation: fadeIn 0.3s;
-}
-
-.add-btn {
-    width: 100%;
-    background-color: var(--primary-color);
-    color: #000;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 5px;
-}
-.add-btn:hover { background-color: var(--primary-hover); }
-
-/* --- SİYAHI (List) --- */
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    background-color: #2a2a2a;
-    padding: 15px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    border-left: 4px solid var(--primary-color);
-    transition: 0.2s;
-    position: relative;
-}
-
-li:hover { background-color: #333; }
-
-/* Alt Tapşırıq Dizaynı */
-.sub-task-item {
-    margin-left: 20px; /* Telefonda çox yer tutmasın deyə azaldıldı */
-    border-left: 3px solid #555 !important;
-    background-color: #252525;
-    transform: scale(0.98);
-}
-.sub-task-icon {
-    color: var(--primary-color);
-    margin-right: 5px;
-    font-size: 0.8rem;
-}
-
-/* Başlıq Hissəsi */
-.task-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start; /* Yazı çox olsa yuxarıdan başlasın */
-    width: 100%;
-    gap: 10px;
-}
-
-.task-info {
-    flex: 1;
-    cursor: pointer;
-    word-break: break-word; /* Uzun sözlər daşmasın */
-}
-
-.task-info strong {
-    font-size: 1.1rem;
-    color: white;
-    display: block;
-    line-height: 1.3;
-}
-
-.task-meta {
-    font-size: 0.8rem;
-    color: var(--text-grey);
-    margin-top: 6px;
-    display: flex;
-    flex-wrap: wrap; /* Sığmayanda aşağı düşsün */
-    gap: 8px;
-    align-items: center;
-}
-
-/* --- GİZLİ QEYD QUTUSU --- */
-.task-desc {
-    display: none;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #444;
-    color: #ccc;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    cursor: pointer;
-}
-
-li.active .task-desc {
-    display: block;
-    animation: fadeIn 0.3s ease;
-}
-
-/* --- İNLINE EDİT --- */
-.edit-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.edit-textarea {
-    width: 100%;
-    background: #222;
-    border: 1px solid var(--primary-color);
-    color: white;
-    padding: 10px;
-    border-radius: 6px;
-    resize: vertical;
-    min-height: 80px;
-    font-family: inherit;
-}
-
-/* Təkrarlama və Tarix Seçimləri */
-.extra-options {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed #444;
-}
-
-.option-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.option-group label { font-size: 0.75rem; color: #888; }
-.small-select, .small-input {
-    background: #333; color: white; border: 1px solid #555;
-    padding: 8px; border-radius: 4px; font-size: 0.85rem; width: 100%;
-}
-
-/* Alt Tapşırıq Düyməsi - YENİ DİZAYN */
-.subtask-btn {
-    background-color: #2c2c2c; /* Bir az açıq qara fon */
-    color: var(--primary-color); /* Sarı yazı */
-    border: 1px solid var(--primary-color); /* Nazik, bütöv sarı çərçivə */
-    padding: 12px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 600;
-    width: 100%;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    
-    /* Mərkəzləşdirmə və İkon */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    
-    /* Animasiya üçün */
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-
-/* Üzərinə gələndə (Hover) */
-.subtask-btn:hover {
-    background-color: var(--primary-color); /* İçi tam sarı olsun */
-    color: #000; /* Yazısı qara olsun */
-    transform: translateY(-2px); /* Yüngül yuxarı qalxsın */
-    box-shadow: 0 6px 15px rgba(255, 204, 0, 0.25); /* Sarı parıltı (Glow) */
-    border-color: var(--primary-hover);
-}
-
-/* Basılanda (Active) */
-.subtask-btn:active {
-    transform: scale(0.98); /* Basılanda yüngül sıxılsın */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* İkonun ölçüsü */
-.subtask-btn i {
-    font-size: 1.1rem;
-}
-
-.edit-footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 10px;
-}
-
-.save-btn-small {
-    background: var(--primary-color); color: black; border: none;
-    padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;
-}
-
-/* Düymələr */
-.badge { padding: 3px 8px; border-radius: 4px; background: #444; color: #ccc; font-size: 0.75rem; }
-.recurrence-tag { font-size: 0.7rem; color: #00e676; background: rgba(0, 230, 118, 0.1); padding: 2px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; }
-
-.actions { display: flex; gap: 8px; align-items: flex-start; }
-.check-btn { background: transparent; border: none; cursor: pointer; font-size: 1.4rem; color: #555; padding: 0; }
-.check-btn:hover { color: var(--success); }
-.delete-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 6px; cursor: pointer; }
-
-/* Kateqoriya Silmə (Tag) */
-#custom-cat-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.cat-tag { background: #333; border: 1px solid #555; color: #ccc; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
-.delete-cat-btn { background: transparent; border: none; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 1rem; }
-
-/* Tamamlanmış */
-li.completed { border-left-color: var(--success); opacity: 0.7; }
-li.completed strong { text-decoration: line-through; }
-li.completed .check-btn { color: var(--success); }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* =========================================
-   📱 MOBİL RESPONSİV HİSSƏ (Ən Vacib)
-   ========================================= */
-@media (max-width: 600px) {
-    body {
-        padding: 10px; /* Kənarları azalt */
-        align-items: flex-start; /* Yuxarıdan başlasın */
-    }
-
-    .container {
-        padding: 1.2rem; /* İç boşluğu azalt */
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    /* Headeri alt-alta qoy */
-    .app-header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-
-    .user-info {
-        flex-direction: column; /* Çıxış düyməsi aşağı düşsün */
-        width: 100%;
-    }
-
-    #logout-btn {
-        width: 100%; /* Çıxış düyməsi tam enli olsun */
-    }
-
-    /* Input və Kateqoriyanı alt-alta qoy */
-    .form-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    /* Edit hissəsindəki seçimləri (Tarix, Təkrar) alt-alta qoy */
-    .extra-options {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .save-btn-small {
-        width: 100%; /* Yadda saxla düyməsi böyük olsun */
-    }
-    
-    /* Tapşırıq siyahısı */
-    .task-header {
-        align-items: flex-start;
-    }
-    
-    .actions {
-        flex-direction: column; /* Check və Sil düymələri alt-alta olsun */
-        gap: 15px;
-    }
-    
-    .sub-task-item {
-        margin-left: 10px; /* Alt tapşırıq çox sağa getməsin */
-    }
-}
-
-
-/* ==================================================
-   🔴 RƏNG XƏTASINI DÜZƏLDƏN KOD (Fix Colors)
-   ================================================== */
-
-/* Bütün yazı yazılan yerləri (Input, Textarea, Select) məcbur düzəlt */
-input, textarea, select, .edit-textarea {
-    background-color: #252525 !important; /* Fon mütləq tünd olsun */
-    color: #ffffff !important;           /* Yazı mütləq ağ olsun */
-    border: 1px solid #555 !important;   /* Çərçivə boz */
-    caret-color: var(--primary-color);   /* Yazı kursoru sarı olsun */
-}
-
-/* Üzərinə basanda (Aktiv olanda) */
-input:focus, textarea:focus, select:focus {
-    background-color: #1a1a1a !important; /* Daha tünd */
-    border-color: var(--primary-color) !important; /* Sarı çərçivə */
-    outline: none;
-}
-
-/* İpucu yazısı (Placeholder) görünmürsə, onu da rənglə */
-::placeholder {
-    color: #888 !important; /* Boz rəngdə olsun ki, görünsün */
-    opacity: 1;
-}
-
-/* Tarix (Date) seçən yerin içi də qara olsun */
-input[type="date"] {
-    color-scheme: dark; /* Təqvimi qara rejimdə açar */
-}
-
-/* Alt tapşırıq qeyd yeri xüsusi qoruma */
-.edit-textarea {
-    min-height: 80px;
-    padding: 10px;
-    font-size: 1rem;
-    line-height: 1.5;
-}
-
-
-
-
-/* ... Yuxarıdakı kodlar qalır ... */
-
-/* --- TABS (Keçid Düymələri) --- */
+/* --- TABS (Keçidlər) --- */
 .tabs {
     display: flex;
     gap: 10px;
@@ -466,387 +105,41 @@ input[type="date"] {
     font-weight: bold;
 }
 
-.tab-btn:hover {
-    color: white;
-}
-
-/* --- QEYDLƏR & HƏDƏFLƏR KARTLARI --- */
-.notes-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.note-card {
+/* --- FORM --- */
+#task-form, #note-form {
     background: #252525;
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #444;
-    position: relative;
-}
-
-.note-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    border-bottom: 1px dashed #444;
-    padding-bottom: 5px;
-}
-
-.note-header h3 {
-    color: var(--primary-color);
-    font-size: 1.1rem;
-    margin: 0;
-}
-
-.note-type-badge {
-    font-size: 0.7rem;
-    background: #444;
-    padding: 2px 5px;
-    border-radius: 4px;
-    color: #ccc;
-}
-
-/* Text Note sahəsi */
-.note-textarea {
-    width: 100%;
-    background: #1a1a1a;
-    border: none;
-    color: #ccc;
-    padding: 10px;
-    border-radius: 6px;
-    min-height: 80px;
-    resize: vertical;
-}
-
-/* Checklist sahəsi */
-.checklist-container {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.checklist-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #1a1a1a;
-    padding: 8px;
-    border-radius: 6px;
-}
-
-.checklist-item.done span {
-    text-decoration: line-through;
-    color: #555;
-}
-
-.add-check-input {
-    background: #333;
-    border: 1px solid #555;
-    color: white;
-    padding: 8px;
-    border-radius: 6px;
-    width: 100%;
-    margin-top: 5px;
-}
-
-
-
-/* ... Yuxarıdakı kodlar qalır ... */
-
-/* --- CHECKLIST İTEMLƏRİ (Təkmilləşdirilmiş) --- */
-.checklist-item-wrapper {
-    background: #1a1a1a;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    margin-bottom: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: 0.3s;
-}
-
-/* Bitmiş hədəf (Solğunlaşsın) */
-.checklist-item-wrapper.done {
-    opacity: 0.6;
-    border-color: var(--success);
-}
-.checklist-item-wrapper.done .checklist-main-row span {
-    text-decoration: line-through;
-    color: #777;
-}
-
-/* Üst Hissə (Checkbox, Ad, Sil) */
-.checklist-main-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.delete-sub-btn {
-    margin-left: auto;
-    background: none;
-    border: none;
-    color: #555;
-    font-size: 1.2rem;
-    cursor: pointer;
-}
-.delete-sub-btn:hover { color: var(--danger); }
-
-/* Alt Hissə (Tarix və Qeyd Xanaları) */
-.checklist-details-row {
-    display: flex;
-    gap: 8px;
-}
-
-/* Kiçik Tarix Xanası */
-.cl-date {
-    background: #252525;
-    border: 1px solid #444;
-    color: #ccc;
-    border-radius: 4px;
-    padding: 5px;
-    font-size: 0.8rem;
-    width: 110px; /* Sabit en */
-}
-
-/* Kiçik Qeyd Xanası */
-.cl-note {
-    background: #252525;
-    border: 1px solid #444;
-    color: #ccc;
-    border-radius: 4px;
-    padding: 5px 8px;
-    font-size: 0.8rem;
-    flex: 1; /* Qalan yeri tutsun */
-}
-
-.cl-date:focus, .cl-note:focus {
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-/* Mobil üçün */
-@media (max-width: 600px) {
-    .checklist-details-row {
-        flex-direction: column; /* Mobildə alt-alta olsun */
-    }
-    .cl-date { width: 100%; }
-}
-
-
-/* =========================================
-   🔄 YER DƏYİŞMƏ (SWAP SIDES)
-   ========================================= */
-
-/* 1. ƏSAS TAPŞIRIQLAR: Düymələr Sola, Yazı Sağa */
-.task-header {
-    flex-direction: row-reverse; /* Elementlərin yerini dəyişir */
-}
-
-.task-info {
-    text-align: right; /* Yazını sağ tərəfə yaslayır */
-}
-
-/* Düymələrin arasındakı məsafəni tənzimlə */
-.actions {
-    margin-left: 0 !important;
-    margin-right: 15px;
-}
-
-.sub-task-icon {
-    margin-right: 0;
-    margin-left: 5px; /* İkonu yazının sağına keçir */
-    transform: rotate(0deg); /* Ox işarəsini düzəlt */
-}
-
-/* 2. HƏDƏFLƏR (CHECKLIST): Qeyd Sola, Tarix Sağa */
-.checklist-details-row {
-    flex-direction: row-reverse; /* Qeyd sola, Tarix sağa keçir */
-}
-
-/* 3. CHECKLIST SƏTİRLƏRİ: Silmə düyməsi Sola */
-.checklist-main-row {
-    flex-direction: row-reverse;
-}
-
-.delete-sub-btn {
-    margin-left: 0;
-    margin-right: auto; /* Sola yapışdırır */
-    color: var(--danger);
-}
-
-/* Checkbox sağda qalanda qəribə görünürsə, onu düzəltmək üçün: */
-.checklist-main-row input[type="checkbox"] {
-    order: 1; /* Checkbox ən sağa keçsin */
-    margin-left: 10px;
-}
-
-
-
-
-/* =========================================
-   ✅ HƏDƏFLƏR (CHECKLIST) QƏŞƏNG DİZAYN
-   ========================================= */
-
-/* Hər bir hədəf bloku */
-.checklist-item-wrapper {
-    background: #1e1e1e; /* Daha tünd fon */
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #444;
-    margin-bottom: 12px;
+    margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    position: relative; /* Silmə düyməsi üçün */
-    transition: 0.3s;
 }
 
-/* Bitmiş hədəf */
-.checklist-item-wrapper.done {
-    border-color: var(--success);
-    opacity: 0.7;
-}
-
-/* 1. Sətir: Checkbox və Ad */
-.checklist-main-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.checklist-main-row input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: var(--success);
-}
-
-/* Silmə Düyməsi (Sağ küncdə qəşəng dursun) */
-.delete-sub-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255, 77, 77, 0.1);
-    color: var(--danger);
-    border: 1px solid var(--danger);
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.delete-sub-btn:hover {
-    background: var(--danger);
-    color: white;
-}
-
-/* 2. Sətir: Tarix və Qeyd (Yanaşı və Etiketli) */
-.checklist-details-row {
+.form-row {
     display: flex;
     gap: 10px;
-    align-items: center;
-    background: #252525;
-    padding: 10px;
+}
+
+input, select, textarea {
+    background-color: #333 !important;
+    border: 1px solid #444 !important;
+    color: white !important;
     border-radius: 8px;
-}
-
-/* Inputlar üçün ümumi stil */
-.cl-date, .cl-note {
-    background: transparent !important;
-    border: none !important;
-    color: #ddd !important;
-    font-size: 0.9rem;
-    padding: 5px;
+    padding: 12px;
+    font-size: 1rem;
     outline: none;
+    width: 100%;
 }
 
-/* Tarix xanası */
-.cl-date {
-    border-right: 1px solid #555 !important; /* Ayırıcı xətt */
-    width: 130px;
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color) !important;
 }
 
-/* Qeyd xanası */
-.cl-note {
-    flex: 1;
-}
-
-.cl-note::placeholder {
-    font-style: italic;
-    color: #666 !important;
-}
-
-/* Mobil Uyğunluq */
-@media (max-width: 600px) {
-    .checklist-details-row {
-        flex-direction: column; /* Alt-alta */
-        gap: 5px;
-        align-items: stretch;
-    }
-    .cl-date {
-        border-right: none !important;
-        border-bottom: 1px solid #555 !important;
-        width: 100%;
-    }
-}
-
-
-
-
-/* =========================================
-   📂 KATEQORİYA QRUPLAŞDIRMA DİZAYNI
-   ========================================= */
-
-.category-section {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    animation: fadeIn 0.3s ease;
-}
-
-.category-header {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 12px;
-    border-bottom: 1px solid #444;
-    padding-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.count-badge {
-    background: #444;
-    color: white;
-    font-size: 0.8rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-
-
-/* =========================================
-   📅 TARİX SEÇİMİ (DATE PICKERS)
-   ========================================= */
-
+/* Tarix Xanaları */
 .date-row {
     display: flex;
     gap: 15px;
-    margin-bottom: 10px;
 }
 
 .date-group {
@@ -862,135 +155,176 @@ input[type="date"] {
     margin-left: 2px;
 }
 
-/* Tarix xanalarını gözəlləşdiririk */
 input[type="date"] {
-    background-color: #252525 !important;
-    color: white !important;
-    border: 1px solid #444;
-    padding: 10px;
-    border-radius: 8px;
-    width: 100%;
-    font-family: inherit;
-    color-scheme: dark; /* Təqvimi qara rejimdə açır */
+    color-scheme: dark;
 }
 
-/* Hədəf (Checklist) içindəki tarix xanaları */
-.cl-date-group {
+/* Düymələr */
+.add-btn {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 5px;
+}
+.add-btn:hover { background-color: var(--primary-hover); }
+
+/* --- KATEQORİYA QRUPLAŞDIRMA --- */
+.category-section {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+.category-header {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-transform: capitalize;
+}
+
+.count-badge {
+    background: #444;
+    color: white;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* --- TAPŞIRIQ SİYAHISI --- */
+ul { list-style: none; padding: 0; margin: 0; }
+
+li {
+    background-color: #2a2a2a;
+    padding: 15px;
+    margin-bottom: 8px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
+    border-left: 4px solid var(--primary-color);
+    transition: 0.2s;
+    position: relative;
 }
 
-.cl-date-label {
-    font-size: 0.65rem;
-    color: #666;
-    margin-bottom: 2px;
+li.task-overdue {
+    border-left-color: #ff4d4d !important;
+    background: rgba(255, 77, 77, 0.08);
 }
 
+.task-overdue-badge {
+    color: #ff4d4d;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 5px;
+    animation: pulse 2s infinite;
+    white-space: nowrap; /* Yazı qırılmasın */
+}
 
+li.completed { border-left-color: var(--success); opacity: 0.7; }
+li.completed strong { text-decoration: line-through; }
+li.completed .check-btn { color: var(--success); }
 
-/* =========================================
-   🛑 MODAL (POP-UP) DİZAYNI
-   ========================================= */
+/* Alt Tapşırıq */
+.sub-task-item {
+    margin-left: 15px;
+    border-left: 3px solid #555 !important;
+    background-color: #252525;
+    transform: scale(0.98);
+}
 
-/* Arxa fon (Qaranlıqlaşdırma) */
-.modal-overlay {
-    display: none; /* Başlanğıcda gizlidir */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Arxanı tündləşdirir */
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px); /* Arxanı bulanıqlaşdırır */
+/* Gizli Alt Tapşırıq Qutusu */
+.subtask-container {
+    display: none;
+    margin-top: 5px;
+    padding-left: 10px;
+    border-left: 1px dashed #444;
     animation: fadeIn 0.3s;
 }
 
-/* Qutunun özü */
-.modal-box {
-    background: #1e1e1e;
-    border: 1px solid var(--primary-color);
-    padding: 25px;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(255, 204, 0, 0.2);
-    transform: scale(0.9);
-    animation: popIn 0.3s forwards;
-}
-
-.modal-box h3 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    font-size: 1.5rem;
-}
-
-.modal-box p {
-    color: #ccc;
-    font-size: 0.9rem;
-    margin-bottom: 15px;
-}
-
-/* Modal içindəki input */
-#modal-subtask-input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    background: #252525;
-    border: 1px solid #555;
-    color: white;
-    border-radius: 8px;
-    font-size: 1rem;
-}
-#modal-subtask-input:focus {
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-/* Düymələr yan-yana */
-.modal-buttons {
+/* Başlıq Hissəsi */
+.task-header {
     display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
     gap: 10px;
-    justify-content: center;
 }
 
-.modal-btn {
+.task-info {
     flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
     cursor: pointer;
-    transition: 0.2s;
+    word-break: break-word;
 }
 
-.modal-btn.save {
-    background: var(--primary-color);
-    color: black;
-}
-.modal-btn.save:hover {
-    background: #e6b800;
-}
-
-.modal-btn.cancel {
-    background: #333;
+.task-info strong {
+    font-size: 1.05rem;
     color: white;
-    border: 1px solid #555;
-}
-.modal-btn.cancel:hover {
-    background: #444;
-}
-
-/* Animasiyalar */
-@keyframes popIn {
-    to { transform: scale(1); opacity: 1; }
+    display: block;
+    line-height: 1.3;
+    margin-bottom: 4px;
 }
 
+.task-meta {
+    font-size: 0.8rem;
+    color: var(--text-grey);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
 
-/* Qeyd Bölmə Başlıqları */
+.actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.check-btn, .delete-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+}
+.check-btn { color: #555; }
+.check-btn:hover { color: var(--success); }
+.delete-btn { color: var(--danger); font-size: 1rem; }
+
+/* Description Box */
+.task-desc {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #444;
+    color: #ccc;
+    font-size: 0.95rem;
+}
+li.active .task-desc { display: block; animation: fadeIn 0.3s; }
+
+/* --- EDIT CONTAINER --- */
+.edit-container { display: flex; flex-direction: column; gap: 10px; }
+.edit-textarea { min-height: 80px; resize: vertical; }
+.extra-options { display: flex; flex-wrap: wrap; gap: 10px; }
+.extra-options .date-group { flex: 1; min-width: 120px; }
+.save-btn-small { background: var(--primary-color); color: black; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+.subtask-btn { background: #333; color: var(--primary-color); border: 1px dashed var(--primary-color); padding: 8px; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 5px; }
+
+/* --- HƏDƏFLƏR (CHECKLIST) --- */
 .note-section-title {
     color: var(--primary-color);
     border-bottom: 2px solid #444;
@@ -998,113 +332,146 @@ input[type="date"] {
     margin-bottom: 15px;
     font-size: 1.2rem;
     font-weight: bold;
+}
+
+.checklist-item-wrapper {
+    background: #1a1a1a;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-bottom: 8px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
 }
-
-
-/* =========================================
-   🕵️ GİZLİ ALT TAPŞIRIQ SİYAHISI
-   ========================================= */
-
-.subtask-container {
-    display: none; /* Başlanğıcda gizlidir */
-    margin-top: 5px;
-    margin-left: 20px;
-    padding-left: 15px;
-    border-left: 2px dashed #444; /* Qırıq xətt ilə ayrılır */
-    animation: fadeIn 0.3s ease;
-}
-
-/* Alt tapşırıqları bir az kiçiltmək */
-.subtask-container li {
-    font-size: 0.95rem;
-    padding: 10px;
-    background: #222;
-}
-
-/* =========================================
-   ⚠️ GECİKMƏ VƏ TAMAMLANMA (OVERDUE & DONE)
-   ========================================= */
-
-/* Gecikmiş Hədəf (Qırmızı) */
 .checklist-item-wrapper.overdue {
-    border-color: #ff4d4d !important;
-    background-color: rgba(255, 77, 77, 0.08); /* Yüngül qırmızı fon */
-    box-shadow: 0 0 5px rgba(255, 77, 77, 0.2);
+    border-color: #ff4d4d;
+    background: rgba(255,77,77,0.08);
 }
+.checklist-item-wrapper.done { opacity: 0.6; border-color: var(--success); }
+.checklist-item-wrapper.done .checklist-main-row span { text-decoration: line-through; color: #777; }
 
-.badge-overdue {
-    color: #ff4d4d;
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-left: auto; /* Ən sağa çək */
+.checklist-main-row {
     display: flex;
     align-items: center;
-    gap: 5px;
-    animation: pulse 2s infinite; /* Yanıb-sönən animasiya */
-}
-
-/* Tamamlanmış Bölmə Başlığı (Divider) */
-.completed-divider {
-    font-size: 0.85rem;
-    color: #888;
-    text-align: center;
-    margin: 20px 0 10px 0;
-    position: relative;
-    opacity: 0.7;
-}
-
-.completed-divider::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: #444;
-    z-index: -1;
-}
-
-.completed-divider span {
-    background: #252525; /* Fon rəngi ilə eyni olmalıdır */
-    padding: 0 10px;
-}
-
-/* Animasiya */
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
-}
-
-
-/* =========================================
-   TASK GECİKMƏ DİZAYNI
-   ========================================= */
-
-/* Tapşırıq gecikibsə (Siyahı elementi) */
-li.task-overdue {
-    border-left-color: #ff4d4d !important; /* Sol tərəfi qırmızı et */
-    background: rgba(255, 77, 77, 0.08); /* Çox yüngül qırmızı fon */
-}
-
-/* Gecikmə yazısı (Badge) */
-.task-overdue-badge {
-    color: #ff4d4d;
-    font-size: 0.8rem;
+    gap: 10px;
     font-weight: bold;
-    margin-left: 10px;
-    animation: pulse 2s infinite;
-}
-
-/* Təsdiq Modalındakı Silmə Düyməsi */
-.modal-btn.delete {
-    background: #ff4d4d; /* Qırmızı */
     color: white;
 }
-.modal-btn.delete:hover {
-    background: #cc0000; /* Tünd qırmızı */
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
+.checklist-main-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); }
+
+.checklist-details-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap; /* Mobildə alt-alta düşsün */
+}
+.cl-date-group { display: flex; flex-direction: column; flex: 1; min-width: 100px; }
+.cl-date-label { font-size: 0.65rem; color: #666; margin-bottom: 2px; }
+.cl-date { font-size: 0.8rem; padding: 5px; }
+.cl-note { flex: 2; min-width: 150px; font-size: 0.8rem; padding: 5px; background: transparent !important; border: 1px solid #444 !important; }
+
+.badge-overdue { color: #ff4d4d; font-size: 0.75rem; margin-left: auto; display: flex; align-items: center; gap: 3px; animation: pulse 2s infinite; }
+.completed-divider { text-align: center; color: #555; margin: 15px 0 10px; font-size: 0.8rem; border-top: 1px solid #333; padding-top: 5px; }
+
+/* --- MODALLAR --- */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;
+    backdrop-filter: blur(4px); animation: fadeIn 0.3s;
+}
+.modal-box {
+    background: #1e1e1e; border: 1px solid var(--primary-color); padding: 20px;
+    border-radius: 12px; width: 90%; max-width: 400px; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: popIn 0.3s;
+}
+.modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+.modal-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.modal-btn.save { background: var(--primary-color); color: black; }
+.modal-btn.cancel { background: #333; color: white; }
+.modal-btn.delete { background: var(--danger); color: white; }
+
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+/* =========================================
+   📱 RESPONSIVLİK (MEDIA QUERIES)
+   ========================================= */
+
+/* Planşet və Kiçik Laptoplar (max-width: 768px) */
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+        max-width: 100%; /* Tam ekran */
+    }
+
+    .form-row {
+        flex-direction: column; /* Input və Select alt-alta */
+    }
+
+    .date-row {
+        flex-direction: row; /* Tarixlər hələ də yan-yana qalsın (yer var) */
+    }
+}
+
+/* Mobil Telefonlar (max-width: 600px) */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+        align-items: flex-start;
+    }
+
+    .container {
+        padding: 1rem;
+        margin-top: 0;
+        border-radius: 12px;
+    }
+
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .user-info {
+        width: 100%;
+        justify-content: space-between; /* Ad solda, çıxış sağda */
+    }
+
+    /* Tarixlər mobildə alt-alta olsun */
+    .date-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .extra-options {
+        flex-direction: column; /* Edit menyusunda hər şey alt-alta */
+    }
+
+    /* Hədəflər hissəsində detallar */
+    .checklist-details-row {
+        flex-direction: column;
+    }
+    .cl-date-group, .cl-note {
+        width: 100%; /* Tam en */
+    }
+
+    /* Düymələr daha rahat basılsın */
+    .modal-buttons {
+        flex-direction: column;
+    }
+    .modal-btn {
+        width: 100%;
+        padding: 12px; /* Daha qalın düymə */
+    }
+
+    .task-header {
+        align-items: flex-start;
+    }
+    
+    .actions {
+        flex-direction: column; /* Sil və Check düymələri alt-alta */
+        gap: 15px; /* Aralı olsun ki səhv basmayasan */
+    }
 }
