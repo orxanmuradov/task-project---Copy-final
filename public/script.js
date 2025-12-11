@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
+ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
@@ -15,7 +15,87 @@ document.addEventListener("DOMContentLoaded", async () => {
         return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
-    // --- TABS ---
+    // ===============================================
+    // 🔔 YENİ: BİLDİRİŞ (NOTIFICATION) SİSTEMİ 🔔
+    // ===============================================
+    
+    // 1. İcazə istəyirik
+    if ("Notification" in window) {
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }
+
+    // 2. Yoxlama Funksiyası (Tasks & Checklists)
+    async function checkDeadlines() {
+        if (Notification.permission !== "granted") return;
+
+        const today = new Date().toISOString().split('T')[0];
+        const notifiedItems = JSON.parse(localStorage.getItem("notifiedItems") || "[]");
+
+        // --- TAPŞIRIQLARI YOXLAYIRIQ ---
+        if (allTasksCache.length > 0) {
+            allTasksCache.forEach(task => {
+                // Əgər bitməyibsə VƏ (tarix bu gündürsə VƏ YA gecikibsə)
+                if (task.status !== 'completed' && task.due_date && task.due_date <= today) {
+                    const uniqueKey = `task-${task.id}-${today}`; // Bu gün üçün xatırlatdım?
+                    
+                    if (!notifiedItems.includes(uniqueKey)) {
+                        sendNotification("📅 Tapşırıq Xatırlatması!", `"${task.title}" tapşırığının vaxtı çatıb və ya gecikir!`);
+                        notifiedItems.push(uniqueKey);
+                    }
+                }
+            });
+        }
+
+        // --- HƏDƏFLƏRİ (CHECKLIST) YOXLAYIRIQ ---
+        // (Bunun üçün qeydləri yenidən çəkmək lazımdır ki, aktual olsun)
+        try {
+            const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.notes) {
+                data.notes.filter(n => n.type === 'checklist').forEach(note => {
+                    let items = [];
+                    try { items = JSON.parse(note.content || '[]'); } catch(e) {}
+                    
+                    items.forEach((item, index) => {
+                        if (!item.done && item.endDate && item.endDate <= today) {
+                            const uniqueKey = `check-${note.id}-${index}-${today}`;
+                            
+                            if (!notifiedItems.includes(uniqueKey)) {
+                                sendNotification("⚠️ Hədəf Xatırlatması!", `"${item.text}" hədəfinin vaxtı bitib!`);
+                                notifiedItems.push(uniqueKey);
+                            }
+                        }
+                    });
+                });
+            }
+        } catch(e) {}
+
+        // Siyahını yaddaşa yaz (Təkrar olmasın deyə)
+        localStorage.setItem("notifiedItems", JSON.stringify(notifiedItems));
+    }
+
+    // 3. Bildiriş Göndərən Helper
+    function sendNotification(title, body) {
+        const notification = new Notification(title, {
+            body: body,
+            icon: "https://cdn-icons-png.flaticon.com/512/3239/3239952.png" // Zəng ikonu
+        });
+        
+        // Klikləyəndə sayta gəlsin
+        notification.onclick = () => {
+            window.focus();
+        };
+    }
+
+    // 4. Hər 1 dəqiqədən bir yoxla (60000 ms)
+    setInterval(checkDeadlines, 60000);
+    // Səhifə açılanda da bir dəfə yoxla
+    setTimeout(checkDeadlines, 3000); 
+
+    // ===============================================
+
     window.switchTab = (tabName) => {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(view => view.style.display = 'none');
@@ -166,9 +246,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (checklistNotes.length > 0) { const s = document.createElement("div"); s.style.marginTop = "30px"; s.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; checklistNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); } 
     }
 
-    // ==========================================
-    // 👇 BURADA GECİKMƏ RƏNGİ MƏCBURİDİR 👇
-    // ==========================================
     function createNoteCard(note){
         const div=document.createElement("div");div.className="note-card";
         let hh=`<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
@@ -190,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 
                 if(isDone) wrapperClass+=" done";
                 if(isOverdue) {
-                    wrapperClass+=" overdue"; // Bu class CSS-də !important olaraq qırmızıdır
+                    wrapperClass+=" overdue"; 
                     badge=`<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
                 }
                 
@@ -214,7 +291,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; 
     window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; 
     
-    // YENİ: Update edən kimi loadNotes çağır ki, rəng dərhal dəyişsin
     window.updateChecklistItem=async(id,idx,f,v)=>{
         const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});
         const d=await r.json();
@@ -224,8 +300,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if(i[idx]){
             i[idx][f]=v;
             await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});
-            
-            // VACİB: Rəngin dərhal dəyişməsi üçün:
             loadNotes(); 
         }
     }; 
