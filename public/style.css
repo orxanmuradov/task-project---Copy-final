@@ -2,10 +2,10 @@
    ÜMUMİ SİTİL (Sarı & Qara)
    ========================================= */
 :root {
-    --primary-color: #ffcc00; /* Sarı */
+    --primary-color: #ffcc00;
     --primary-hover: #e6b800;
-    --bg-dark: #121212;       /* Qara Fon */
-    --bg-card: #1e1e1e;       /* Kart Fonu */
+    --bg-dark: #121212;
+    --bg-card: #1e1e1e;
     --text-light: #ffffff;
     --text-grey: #b3b3b3;
     --danger: #ff4d4d;
@@ -16,7 +16,8 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent; /* Mobildə toxunanda göy rəngi ləğv et */
 }
 
 body {
@@ -24,21 +25,21 @@ body {
     color: var(--text-light);
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Yuxarıdan başlasın */
+    align-items: flex-start;
     min-height: 100vh;
-    padding: 20px;
+    padding: 15px; /* Mobildə kənardan boşluq */
 }
 
 /* Əsas Qutu */
 .container {
     background-color: var(--bg-card);
     width: 100%;
-    max-width: 600px; /* Kompüterdə maksimum en */
-    padding: 2rem;
+    max-width: 600px;
+    padding: 1.5rem;
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     border: 1px solid #333;
-    transition: all 0.3s ease;
+    margin-bottom: 50px; /* Aşağıda yer qalsın */
 }
 
 /* Header */
@@ -49,12 +50,12 @@ body {
     margin-bottom: 20px;
     border-bottom: 2px solid var(--primary-color);
     padding-bottom: 15px;
-    flex-wrap: wrap; /* Mobildə sığmayanda aşağı atsın */
+    flex-wrap: wrap;
     gap: 10px;
 }
 
 .main-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     color: var(--primary-color);
     margin: 0;
 }
@@ -74,17 +75,15 @@ body {
     padding: 8px 12px;
     border-radius: 6px;
     cursor: pointer;
-    transition: 0.3s;
 }
-#logout-btn:hover { background: var(--danger); }
 
-/* --- TABS (Keçidlər) --- */
+/* Tabs */
 .tabs {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     margin-bottom: 20px;
     border-bottom: 1px solid #333;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
 }
 
 .tab-btn {
@@ -92,10 +91,10 @@ body {
     background: transparent;
     color: #888;
     border: none;
-    padding: 10px;
+    padding: 12px;
     font-size: 1rem;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
+    border-bottom: 3px solid transparent;
     transition: 0.3s;
 }
 
@@ -105,29 +104,14 @@ body {
     font-weight: bold;
 }
 
-/* --- FORM --- */
-#task-form, #note-form {
-    background: #252525;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.form-row {
-    display: flex;
-    gap: 10px;
-}
-
+/* Inputs */
 input, select, textarea {
-    background-color: #333 !important;
+    background-color: #2c2c2c !important;
     border: 1px solid #444 !important;
     color: white !important;
     border-radius: 8px;
     padding: 12px;
-    font-size: 1rem;
+    font-size: 16px; /* Mobildə zoom olmaması üçün 16px vacibdir */
     outline: none;
     width: 100%;
 }
@@ -136,10 +120,16 @@ input:focus, select:focus, textarea:focus {
     border-color: var(--primary-color) !important;
 }
 
-/* Tarix Xanaları */
-.date-row {
+/* Form Layout */
+#task-form, #note-form {
     display: flex;
+    flex-direction: column;
     gap: 15px;
+}
+
+.form-row, .date-row {
+    display: flex;
+    gap: 10px;
 }
 
 .date-group {
@@ -147,331 +137,217 @@ input:focus, select:focus, textarea:focus {
     display: flex;
     flex-direction: column;
 }
-
 .date-group label {
     font-size: 0.8rem;
     color: #888;
-    margin-bottom: 4px;
-    margin-left: 2px;
+    margin-bottom: 5px;
 }
 
-input[type="date"] {
-    color-scheme: dark;
-}
-
-/* Düymələr */
+/* Buttons */
 .add-btn {
     width: 100%;
     background-color: var(--primary-color);
     color: #000;
     border: none;
-    padding: 12px;
+    padding: 14px; /* Barmaq üçün daha rahat */
     border-radius: 8px;
     font-size: 1.1rem;
-    cursor: pointer;
     font-weight: bold;
+    cursor: pointer;
     margin-top: 5px;
 }
-.add-btn:hover { background-color: var(--primary-hover); }
 
-/* --- KATEQORİYA QRUPLAŞDIRMA --- */
-.category-section {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    animation: fadeIn 0.3s ease;
-}
-
-.category-header {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 12px;
-    border-bottom: 1px solid #444;
-    padding-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-transform: capitalize;
-}
-
-.count-badge {
-    background: #444;
-    color: white;
-    font-size: 0.8rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-
-/* --- TAPŞIRIQ SİYAHISI --- */
-ul { list-style: none; padding: 0; margin: 0; }
+/* List Items */
+ul { list-style: none; padding: 0; }
 
 li {
     background-color: #2a2a2a;
     padding: 15px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     border-radius: 10px;
-    display: flex;
-    flex-direction: column;
     border-left: 4px solid var(--primary-color);
-    transition: 0.2s;
     position: relative;
 }
 
-li.task-overdue {
-    border-left-color: #ff4d4d !important;
-    background: rgba(255, 77, 77, 0.08);
-}
+li.task-overdue { border-left-color: var(--danger) !important; background: rgba(255, 77, 77, 0.1); }
+.task-overdue-badge { color: var(--danger); font-size: 0.75rem; font-weight: bold; display: block; margin-top: 2px; }
 
-.task-overdue-badge {
-    color: #ff4d4d;
-    font-size: 0.7rem;
-    font-weight: bold;
-    margin-left: 5px;
-    animation: pulse 2s infinite;
-    white-space: nowrap; /* Yazı qırılmasın */
-}
-
-li.completed { border-left-color: var(--success); opacity: 0.7; }
-li.completed strong { text-decoration: line-through; }
-li.completed .check-btn { color: var(--success); }
-
-/* Alt Tapşırıq */
-.sub-task-item {
-    margin-left: 15px;
-    border-left: 3px solid #555 !important;
-    background-color: #252525;
-    transform: scale(0.98);
-}
-
-/* Gizli Alt Tapşırıq Qutusu */
-.subtask-container {
-    display: none;
-    margin-top: 5px;
-    padding-left: 10px;
-    border-left: 1px dashed #444;
-    animation: fadeIn 0.3s;
-}
-
-/* Başlıq Hissəsi */
+/* Task Header - Flex Layout */
 .task-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    width: 100%;
     gap: 10px;
 }
 
 .task-info {
     flex: 1;
-    cursor: pointer;
-    word-break: break-word;
+    overflow: hidden; /* Daşmanın qarşısını al */
 }
 
 .task-info strong {
-    font-size: 1.05rem;
-    color: white;
+    font-size: 1.1rem;
     display: block;
-    line-height: 1.3;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
+    word-wrap: break-word; /* Uzun sözləri qır */
 }
 
 .task-meta {
     font-size: 0.8rem;
-    color: var(--text-grey);
+    color: #aaa;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    align-items: center;
 }
 
 .actions {
     display: flex;
-    gap: 8px;
+    gap: 15px; /* Düymələr arası məsafə */
     align-items: center;
+    flex-shrink: 0; /* Sıxılmasın */
 }
 
 .check-btn, .delete-btn {
     background: transparent;
     border: none;
-    cursor: pointer;
-    font-size: 1.2rem;
+    font-size: 1.4rem; /* İkonları böyüt */
     padding: 5px;
+    cursor: pointer;
 }
-.check-btn { color: #555; }
+.check-btn { color: #666; }
 .check-btn:hover { color: var(--success); }
-.delete-btn { color: var(--danger); font-size: 1rem; }
+.delete-btn { color: var(--danger); }
 
-/* Description Box */
-.task-desc {
+/* Subtasks */
+.subtask-container {
     display: none;
     margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #444;
-    color: #ccc;
-    font-size: 0.95rem;
+    padding-left: 10px;
+    border-left: 2px dashed #444;
 }
-li.active .task-desc { display: block; animation: fadeIn 0.3s; }
+.sub-task-item {
+    background: #222;
+    margin-left: 0; /* Mobildə çox sağa getməsin */
+    border-left: 3px solid #555 !important;
+}
 
-/* --- EDIT CONTAINER --- */
-.edit-container { display: flex; flex-direction: column; gap: 10px; }
-.edit-textarea { min-height: 80px; resize: vertical; }
-.extra-options { display: flex; flex-wrap: wrap; gap: 10px; }
-.extra-options .date-group { flex: 1; min-width: 120px; }
-.save-btn-small { background: var(--primary-color); color: black; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-.subtask-btn { background: #333; color: var(--primary-color); border: 1px dashed var(--primary-color); padding: 8px; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 5px; }
-
-/* --- HƏDƏFLƏR (CHECKLIST) --- */
-.note-section-title {
-    color: var(--primary-color);
-    border-bottom: 2px solid #444;
-    padding-bottom: 8px;
-    margin-bottom: 15px;
+/* Category Sections */
+.category-section {
+    margin-bottom: 25px;
+}
+.category-header {
     font-size: 1.2rem;
-    font-weight: bold;
-}
-
-.checklist-item-wrapper {
-    background: #1a1a1a;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    margin-bottom: 8px;
+    color: var(--primary-color);
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    justify-content: space-between;
 }
-.checklist-item-wrapper.overdue {
-    border-color: #ff4d4d;
-    background: rgba(255,77,77,0.08);
-}
-.checklist-item-wrapper.done { opacity: 0.6; border-color: var(--success); }
-.checklist-item-wrapper.done .checklist-main-row span { text-decoration: line-through; color: #777; }
 
-.checklist-main-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: bold;
-    color: white;
-}
-.checklist-main-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); }
-
-.checklist-details-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap; /* Mobildə alt-alta düşsün */
-}
-.cl-date-group { display: flex; flex-direction: column; flex: 1; min-width: 100px; }
-.cl-date-label { font-size: 0.65rem; color: #666; margin-bottom: 2px; }
-.cl-date { font-size: 0.8rem; padding: 5px; }
-.cl-note { flex: 2; min-width: 150px; font-size: 0.8rem; padding: 5px; background: transparent !important; border: 1px solid #444 !important; }
-
-.badge-overdue { color: #ff4d4d; font-size: 0.75rem; margin-left: auto; display: flex; align-items: center; gap: 3px; animation: pulse 2s infinite; }
-.completed-divider { text-align: center; color: #555; margin: 15px 0 10px; font-size: 0.8rem; border-top: 1px solid #333; padding-top: 5px; }
-
-/* --- MODALLAR --- */
+/* Modals */
 .modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;
-    backdrop-filter: blur(4px); animation: fadeIn 0.3s;
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
+
 .modal-box {
-    background: #1e1e1e; border: 1px solid var(--primary-color); padding: 20px;
-    border-radius: 12px; width: 90%; max-width: 400px; text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: popIn 0.3s;
+    background: #1e1e1e;
+    border: 1px solid var(--primary-color);
+    padding: 20px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
 }
-.modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
-.modal-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+.modal-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+}
 .modal-btn.save { background: var(--primary-color); color: black; }
 .modal-btn.cancel { background: #333; color: white; }
 .modal-btn.delete { background: var(--danger); color: white; }
 
-/* ANIMATIONS */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-
-/* =========================================
-   📱 RESPONSIVLİK (MEDIA QUERIES)
-   ========================================= */
-
-/* Planşet və Kiçik Laptoplar (max-width: 768px) */
-@media (max-width: 768px) {
-    .container {
-        padding: 1.5rem;
-        max-width: 100%; /* Tam ekran */
-    }
-
-    .form-row {
-        flex-direction: column; /* Input və Select alt-alta */
-    }
-
-    .date-row {
-        flex-direction: row; /* Tarixlər hələ də yan-yana qalsın (yer var) */
-    }
+/* Checklist Items */
+.checklist-item-wrapper {
+    background: #1a1a1a;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-bottom: 10px;
+}
+.checklist-main-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.checklist-main-row input[type="checkbox"] {
+    width: 24px; height: 24px; /* Mobildə checkbox böyük olsun */
+    margin: 0;
+}
+.checklist-details-row {
+    display: flex;
+    gap: 10px;
 }
 
-/* Mobil Telefonlar (max-width: 600px) */
-@media (max-width: 600px) {
+/* =========================================
+   📱 MOBİL ÜÇÜN XÜSUSİ DÜZƏLİŞLƏR (Mobile Override)
+   ========================================= */
+@media (max-width: 768px) {
     body {
-        padding: 10px;
-        align-items: flex-start;
+        padding: 10px; /* Kənarları azalt */
     }
 
     .container {
         padding: 1rem;
-        margin-top: 0;
-        border-radius: 12px;
-    }
-
-    .app-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .user-info {
         width: 100%;
-        justify-content: space-between; /* Ad solda, çıxış sağda */
     }
 
-    /* Tarixlər mobildə alt-alta olsun */
-    .date-row {
+    /* Inputları alt-alta sal */
+    .form-row {
         flex-direction: column;
-        gap: 10px;
     }
 
-    .extra-options {
-        flex-direction: column; /* Edit menyusunda hər şey alt-alta */
+    .date-row {
+        flex-direction: column; /* Tarixlər alt-alta */
     }
 
-    /* Hədəflər hissəsində detallar */
+    /* Checklist detallarını alt-alta sal */
     .checklist-details-row {
         flex-direction: column;
     }
     .cl-date-group, .cl-note {
-        width: 100%; /* Tam en */
+        width: 100%;
     }
 
-    /* Düymələr daha rahat basılsın */
-    .modal-buttons {
+    /* Task Header: Mobildə yer dardırsa */
+    .task-header {
+        align-items: flex-start; 
+    }
+
+    /* Edit panelindəki seçimlər */
+    .extra-options {
         flex-direction: column;
     }
-    .modal-btn {
-        width: 100%;
-        padding: 12px; /* Daha qalın düymə */
-    }
-
-    .task-header {
-        align-items: flex-start;
-    }
     
-    .actions {
-        flex-direction: column; /* Sil və Check düymələri alt-alta */
-        gap: 15px; /* Aralı olsun ki səhv basmayasan */
-    }
+    /* Fontları bir az kiçilt ki sığsın */
+    .main-title { font-size: 1.3rem; }
 }
