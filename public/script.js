@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
+ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
@@ -34,8 +34,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const newCatContainer = document.getElementById("new-cat-container");
     const newCatInput = document.getElementById("new-cat-input");
     const customCatList = document.getElementById("custom-cat-list");
-
-    // Qlobal dəyişənlər (Tapşırıqları yadda saxlamaq üçün, beləcə hər dəfə hesablaya bilərik)
     let allTasksCache = []; 
 
     await loadCategories();
@@ -83,14 +81,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // --- TASK LOAD ---
+    // ==========================================================
+    // 👇 YENİ: TASKLARI YÜKLƏYƏNDƏ UŞAQLARI GİZLƏDİRİK 👇
+    // ==========================================================
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
-        
-        // Cache-ə yazırıq ki, renderTask funksiyası uşaqları tapa bilsin
         allTasksCache = data.tasks || [];
-
         const container = document.getElementById("tasks-container");
         if (!container) return; 
         container.innerHTML = "";
@@ -119,8 +116,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const ul = document.createElement("ul"); ul.style.listStyle = "none"; ul.style.padding = "0";
                 
                 tasksInGroup.forEach(parent => {
+                    // 1. Ana tapşırığı çək
                     renderTask(parent, ul, false);
-                    children.filter(c => c.parent_id === parent.id).forEach(child => renderTask(child, ul, true));
+
+                    // 2. Onun uşaqlarını tap
+                    const myChildren = children.filter(c => c.parent_id === parent.id);
+                    
+                    // 3. Əgər uşaqları varsa, onları AYRICA GİZLİ UL içində çək
+                    if (myChildren.length > 0) {
+                        const subUl = document.createElement("ul");
+                        subUl.className = "subtask-container"; // CSS-də gizlidir
+                        subUl.id = `subtasks-${parent.id}`; // ID veririk ki aça bilək
+                        
+                        myChildren.forEach(child => renderTask(child, subUl, true));
+                        
+                        // Bu gizli siyahını ana siyahıya əlavə et
+                        ul.appendChild(subUl);
+                    }
                 });
                 section.appendChild(header); section.appendChild(ul); container.appendChild(section);
             }
@@ -143,24 +155,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         let recurDisplay = task.recurrence ? `<span class="recurrence-tag"><i class="fas fa-sync-alt"></i> ${translateRecurrence(task.recurrence)}</span>` : "";
         const descText = task.description ? task.description : `<span style="opacity:0.5;font-style:italic;">📝 Detallar...</span>`;
         
-        // --- YENİ: Alt Tapşırıq Sayğacı (Progress) ---
         let subtaskBadge = "";
-        if (!isChild) { // Yalnız ana tapşırıqlarda göstər
-            // Bütün tapşırıqlar içindən bu tapşırığın uşaqlarını tap
+        if (!isChild) {
             const mySubtasks = allTasksCache.filter(t => t.parent_id === task.id);
             if (mySubtasks.length > 0) {
                 const completedCount = mySubtasks.filter(t => t.status === 'completed').length;
                 const totalCount = mySubtasks.length;
-                
-                // Rəng seçimi: Hamısı bitibsə yaşıl, yoxsa sarı
                 const badgeColor = completedCount === totalCount ? '#00e676' : '#ffcc00';
-                
+                // Ox işarəsi əlavə etdik
                 subtaskBadge = `<span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid ${badgeColor}; color: ${badgeColor}; padding: 2px 6px; border-radius: 12px; margin-left: 8px; font-weight: bold;">
-                    <i class="fas fa-tasks"></i> ${completedCount}/${totalCount}
+                    <i class="fas fa-stream"></i> ${completedCount}/${totalCount}
                 </span>`;
             }
         }
-        // ---------------------------------------------
 
         li.innerHTML = `
             <div class="task-header">
@@ -168,7 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <strong>
                         ${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} 
                         ${task.title} 
-                        ${subtaskBadge} 
+                        ${subtaskBadge}
                     </strong>
                     <div class="task-meta">${dateText ? `<span style="color:#ffcc00; margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div>
                 </div>
@@ -182,7 +189,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     function translateRecurrence(type) { const dict = { 'daily': 'Hər gün', 'weekly': 'Həftəlik', 'monthly': 'Aylıq' }; return dict[type] || type; }
-    window.toggleAccordion = (id) => document.getElementById(`task-${id}`).classList.toggle("active");
+    
+    // --- YENİLƏNMİŞ ACCORDION: Həm təsviri, həm alt tapşırıqları açır ---
+    window.toggleAccordion = (id) => { 
+        // 1. Təsviri aç/bağla
+        document.getElementById(`task-${id}`).classList.toggle("active");
+        
+        // 2. Alt tapşırıq siyahısını aç/bağla (əgər varsa)
+        const subList = document.getElementById(`subtasks-${id}`);
+        if (subList) {
+            // Əgər açıqdırsa bağla, bağlıdırsa aç (display style ilə)
+            if (subList.style.display === "block") {
+                subList.style.display = "none";
+            } else {
+                subList.style.display = "block";
+            }
+        }
+    };
+
     window.deleteTask = async (id) => { if(confirm("Silmək?")) { await fetch(`/api/tasks/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadTasks(); } };
     window.toggleStatus = async (id,s,r,t,c) => { const ns=s==='completed'?'pending':'completed'; if(ns==='pending' && r && r!=='null'){ let nextDate=new Date(); if(r==='daily')nextDate.setDate(nextDate.getDate()+1);if(r==='weekly')nextDate.setDate(nextDate.getDate()+7);if(r==='monthly')nextDate.setMonth(nextDate.getMonth()+1); await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({title:t,category:c,description:"",due_date:nextDate.toISOString().split('T')[0],recurrence:r,parent_id:null})}); } await fetch(`/api/tasks/${id}/status`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({status:ns})}); loadTasks(); };
     window.editDescription = (e,id,t,start,due,r,re) => { e.stopPropagation(); const box=document.getElementById(`desc-box-${id}`); if(box.querySelector("textarea")) return; box.innerHTML = `<div class="edit-container" onclick="event.stopPropagation()"><textarea class="edit-textarea" id="input-desc-${id}">${box.innerText.includes("Detallar")?"":box.innerText}</textarea><div class="extra-options"><div class="date-group"><label>Başlanğıc:</label><input type="date" id="input-start-${id}" value="${start}" class="small-input"></div><div class="date-group"><label>Son Tarix:</label><input type="date" id="input-due-${id}" value="${due}" class="small-input"></div><div class="date-group"><label>Təkrar:</label><select id="input-recur-${id}" class="small-select"><option value="">Yox</option><option value="daily" ${r==='daily'?'selected':''}>Hər Gün</option><option value="weekly" ${r==='weekly'?'selected':''}>Həftəlik</option></select></div></div><button class="subtask-btn" onclick="openSubtaskModal(${id})"><i class="fas fa-level-down-alt"></i> Alt Tapşırıq Əlavə Et</button><div class="edit-footer"><button class="save-btn-small" onclick="saveDescription(${id},'${t}')">Yadda Saxla</button></div></div>`; };

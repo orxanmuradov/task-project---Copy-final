@@ -1002,3 +1002,24 @@ input[type="date"] {
     align-items: center;
     gap: 8px;
 }
+
+
+/* =========================================
+   🕵️ GİZLİ ALT TAPŞIRIQ SİYAHISI
+   ========================================= */
+
+.subtask-container {
+    display: none; /* Başlanğıcda gizlidir */
+    margin-top: 5px;
+    margin-left: 20px;
+    padding-left: 15px;
+    border-left: 2px dashed #444; /* Qırıq xətt ilə ayrılır */
+    animation: fadeIn 0.3s ease;
+}
+
+/* Alt tapşırıqları bir az kiçiltmək */
+.subtask-container li {
+    font-size: 0.95rem;
+    padding: 10px;
+    background: #222;
+}
