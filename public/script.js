@@ -34,7 +34,7 @@
     const newCatContainer = document.getElementById("new-cat-container");
     const newCatInput = document.getElementById("new-cat-input");
     const customCatList = document.getElementById("custom-cat-list");
-    let allTasksCache = []; 
+    let allTasksCache = [];
 
     await loadCategories();
     await loadTasks();
@@ -81,9 +81,7 @@
         }
     });
 
-    // ==========================================================
-    // 👇 YENİ: TASKLARI YÜKLƏYƏNDƏ UŞAQLARI GİZLƏDİRİK 👇
-    // ==========================================================
+    // --- TASK LOAD (Gizli Subtasklar) ---
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -116,21 +114,13 @@
                 const ul = document.createElement("ul"); ul.style.listStyle = "none"; ul.style.padding = "0";
                 
                 tasksInGroup.forEach(parent => {
-                    // 1. Ana tapşırığı çək
                     renderTask(parent, ul, false);
-
-                    // 2. Onun uşaqlarını tap
                     const myChildren = children.filter(c => c.parent_id === parent.id);
-                    
-                    // 3. Əgər uşaqları varsa, onları AYRICA GİZLİ UL içində çək
                     if (myChildren.length > 0) {
                         const subUl = document.createElement("ul");
-                        subUl.className = "subtask-container"; // CSS-də gizlidir
-                        subUl.id = `subtasks-${parent.id}`; // ID veririk ki aça bilək
-                        
+                        subUl.className = "subtask-container";
+                        subUl.id = `subtasks-${parent.id}`;
                         myChildren.forEach(child => renderTask(child, subUl, true));
-                        
-                        // Bu gizli siyahını ana siyahıya əlavə et
                         ul.appendChild(subUl);
                     }
                 });
@@ -162,69 +152,110 @@
                 const completedCount = mySubtasks.filter(t => t.status === 'completed').length;
                 const totalCount = mySubtasks.length;
                 const badgeColor = completedCount === totalCount ? '#00e676' : '#ffcc00';
-                // Ox işarəsi əlavə etdik
-                subtaskBadge = `<span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid ${badgeColor}; color: ${badgeColor}; padding: 2px 6px; border-radius: 12px; margin-left: 8px; font-weight: bold;">
-                    <i class="fas fa-stream"></i> ${completedCount}/${totalCount}
-                </span>`;
+                subtaskBadge = `<span style="font-size: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid ${badgeColor}; color: ${badgeColor}; padding: 2px 6px; border-radius: 12px; margin-left: 8px; font-weight: bold;"><i class="fas fa-stream"></i> ${completedCount}/${totalCount}</span>`;
             }
         }
 
-        li.innerHTML = `
-            <div class="task-header">
-                <div class="task-info" onclick="toggleAccordion(${task.id})">
-                    <strong>
-                        ${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} 
-                        ${task.title} 
-                        ${subtaskBadge}
-                    </strong>
-                    <div class="task-meta">${dateText ? `<span style="color:#ffcc00; margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div>
-                </div>
-                <div class="actions">
-                    <button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button>
-                    <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-            <div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
+        li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90 sub-task-icon"></i>':''} ${task.title} ${subtaskBadge}</strong><div class="task-meta">${dateText ? `<span style="color:#ffcc00; margin-right:5px;">${dateText}</span>` : ''} ${recurDisplay}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}" onclick="editDescription(event,${task.id},'${task.title}','${task.start_date||''}','${task.due_date||''}','${task.recurrence||''}','')">${descText}</div>`;
         listElement.appendChild(li);
     }
     
     function translateRecurrence(type) { const dict = { 'daily': 'Hər gün', 'weekly': 'Həftəlik', 'monthly': 'Aylıq' }; return dict[type] || type; }
-    
-    // --- YENİLƏNMİŞ ACCORDION: Həm təsviri, həm alt tapşırıqları açır ---
-    window.toggleAccordion = (id) => { 
-        // 1. Təsviri aç/bağla
-        document.getElementById(`task-${id}`).classList.toggle("active");
-        
-        // 2. Alt tapşırıq siyahısını aç/bağla (əgər varsa)
-        const subList = document.getElementById(`subtasks-${id}`);
-        if (subList) {
-            // Əgər açıqdırsa bağla, bağlıdırsa aç (display style ilə)
-            if (subList.style.display === "block") {
-                subList.style.display = "none";
-            } else {
-                subList.style.display = "block";
-            }
-        }
-    };
-
+    window.toggleAccordion = (id) => { document.getElementById(`task-${id}`).classList.toggle("active"); const subList = document.getElementById(`subtasks-${id}`); if (subList) { subList.style.display = subList.style.display === "block" ? "none" : "block"; } };
     window.deleteTask = async (id) => { if(confirm("Silmək?")) { await fetch(`/api/tasks/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}); loadTasks(); } };
     window.toggleStatus = async (id,s,r,t,c) => { const ns=s==='completed'?'pending':'completed'; if(ns==='pending' && r && r!=='null'){ let nextDate=new Date(); if(r==='daily')nextDate.setDate(nextDate.getDate()+1);if(r==='weekly')nextDate.setDate(nextDate.getDate()+7);if(r==='monthly')nextDate.setMonth(nextDate.getMonth()+1); await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({title:t,category:c,description:"",due_date:nextDate.toISOString().split('T')[0],recurrence:r,parent_id:null})}); } await fetch(`/api/tasks/${id}/status`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({status:ns})}); loadTasks(); };
     window.editDescription = (e,id,t,start,due,r,re) => { e.stopPropagation(); const box=document.getElementById(`desc-box-${id}`); if(box.querySelector("textarea")) return; box.innerHTML = `<div class="edit-container" onclick="event.stopPropagation()"><textarea class="edit-textarea" id="input-desc-${id}">${box.innerText.includes("Detallar")?"":box.innerText}</textarea><div class="extra-options"><div class="date-group"><label>Başlanğıc:</label><input type="date" id="input-start-${id}" value="${start}" class="small-input"></div><div class="date-group"><label>Son Tarix:</label><input type="date" id="input-due-${id}" value="${due}" class="small-input"></div><div class="date-group"><label>Təkrar:</label><select id="input-recur-${id}" class="small-select"><option value="">Yox</option><option value="daily" ${r==='daily'?'selected':''}>Hər Gün</option><option value="weekly" ${r==='weekly'?'selected':''}>Həftəlik</option></select></div></div><button class="subtask-btn" onclick="openSubtaskModal(${id})"><i class="fas fa-level-down-alt"></i> Alt Tapşırıq Əlavə Et</button><div class="edit-footer"><button class="save-btn-small" onclick="saveDescription(${id},'${t}')">Yadda Saxla</button></div></div>`; };
     window.saveDescription = async (id,t) => { const d=document.getElementById(`input-desc-${id}`).value; const start=document.getElementById(`input-start-${id}`).value; const due=document.getElementById(`input-due-${id}`).value; const r=document.getElementById(`input-recur-${id}`).value; await fetch(`/api/tasks/${id}`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,description:d,start_date:start?start:null,due_date:due?due:null,recurrence:r?r:null})}); loadTasks(); };
     window.addSubtask = async (pid) => { const t=prompt("Alt tapşırıq:"); if(t) { await fetch("/api/tasks", {method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({title:t,category:"general",description:"",parent_id:pid})}); loadTasks(); } };
 
-    // --- MODAL ---
     const modal = document.getElementById("subtask-modal"); const modalInput = document.getElementById("modal-subtask-input"); const saveBtn = document.getElementById("save-modal-btn"); const closeBtn = document.getElementById("close-modal-btn"); let currentParentId = null;
     window.openSubtaskModal = (parentId) => { currentParentId = parentId; modal.style.display = "flex"; modalInput.value = ""; modalInput.focus(); };
     closeBtn.addEventListener("click", () => { modal.style.display = "none"; currentParentId = null; });
     saveBtn.addEventListener("click", async () => { const subTitle = modalInput.value.trim(); if (!subTitle) { alert("Adı daxil edin!"); return; } await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ title: subTitle, category: "general", description: "", parent_id: currentParentId }) }); modal.style.display = "none"; loadTasks(); });
     modalInput.addEventListener("keypress", (e) => { if (e.key === "Enter") saveBtn.click(); });
 
-    // NOTES (Eyni)
     document.getElementById("note-form").addEventListener("submit", async (e) => { e.preventDefault(); const title=document.getElementById("note-title").value; const type=document.getElementById("note-type").value; const content=type==='checklist'?'[]':''; const res=await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({title,type,content})}); if(res.ok){document.getElementById("note-title").value="";loadNotes();} });
-    async function loadNotes() { const res=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}}); const data=await res.json(); const container=document.getElementById("notes-list"); container.innerHTML=""; if(!data.notes||data.notes.length===0){container.innerHTML="<p style='text-align:center;color:#555;'>Hələ qeyd yoxdur.</p>";return;} const textNotes=data.notes.filter(n=>n.type==='text'); const checklistNotes=data.notes.filter(n=>n.type==='checklist');
-    if(textNotes.length>0){const s=document.createElement("div");s.innerHTML=`<h3 class="note-section-title">📝 Qeydlər</h3>`;const g=document.createElement("div");g.className="notes-grid";textNotes.forEach(n=>g.appendChild(createNoteCard(n)));s.appendChild(g);container.appendChild(s);}
-    if(checklistNotes.length>0){const s=document.createElement("div");s.style.marginTop="30px";s.innerHTML=`<h3 class="note-section-title">✅ Hədəflər</h3>`;const g=document.createElement("div");g.className="notes-grid";checklistNotes.forEach(n=>g.appendChild(createNoteCard(n)));s.appendChild(g);container.appendChild(s);} }
-    function createNoteCard(note){const div=document.createElement("div");div.className="note-card";let hh=`<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;let ch="";if(note.type==='text'){ch=`<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;}else{let i=[];try{i=JSON.parse(note.content||'[]');}catch(e){i=[];} let ih=i.map((itm,idx)=>`<div class="checklist-item-wrapper ${itm.done?'done':''}"><div class="checklist-main-row"><input type="checkbox" ${itm.done?'checked':''} onchange="updateChecklistItem(${note.id},${idx},'done',this.checked)"><span style="flex:1;">${itm.text}</span><button onclick="removeChecklistItem(${note.id},${idx})" class="delete-sub-btn">&times;</button></div><div class="checklist-details-row"><div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${itm.startDate||''}" onchange="updateChecklistItem(${note.id},${idx},'startDate',this.value)"></div><div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${itm.endDate||''}" onchange="updateChecklistItem(${note.id},${idx},'endDate',this.value)"></div><input type="text" class="cl-note" placeholder="Qeyd..." value="${itm.note||''}" onchange="updateChecklistItem(${note.id},${idx},'note',this.value)" style="margin-top:10px;"></div></div>`).join(''); ch=`<div class="checklist-container">${ih}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;} div.innerHTML=hh+ch;return div;}
-    window.deleteNote=async(id)=>{if(!confirm("Silmək?"))return;await fetch(`/api/notes/${id}`,{method:"DELETE",headers:{"Authorization":`Bearer ${token}`}});loadNotes();}; window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});if(f==='done')loadNotes();}}; window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
+    async function loadNotes() { 
+        const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+        const container = document.getElementById("notes-list");
+        container.innerHTML = "";
+        if (!data.notes || data.notes.length === 0) { container.innerHTML = "<p style='text-align:center; color:#555;'>Hələ qeyd yoxdur.</p>"; return; }
+        const textNotes = data.notes.filter(n => n.type === 'text');
+        const checklistNotes = data.notes.filter(n => n.type === 'checklist');
+        if (textNotes.length > 0) { const s = document.createElement("div"); s.innerHTML = `<h3 class="note-section-title">📝 Qeydlər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; textNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); }
+        if (checklistNotes.length > 0) { const s = document.createElement("div"); s.style.marginTop = "30px"; s.innerHTML = `<h3 class="note-section-title">✅ Hədəflər</h3>`; const g = document.createElement("div"); g.className = "notes-grid"; checklistNotes.forEach(n => g.appendChild(createNoteCard(n))); s.appendChild(g); container.appendChild(s); } 
+    }
+
+    // ===============================================
+    // 👇 YENİ: CREATE NOTE CARD (TƏKMİL) 👇
+    // ===============================================
+    function createNoteCard(note) {
+        const div = document.createElement("div");
+        div.className = "note-card";
+        let hh = `<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
+        let ch = "";
+        
+        if (note.type === 'text') {
+            ch = `<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>`;
+        } else {
+            let items = [];
+            try { items = JSON.parse(note.content || '[]'); } catch (e) { items = []; }
+            
+            // Bu günün tarixi (YYYY-MM-DD)
+            const today = new Date().toISOString().split('T')[0];
+
+            // Render prosesi: Elementləri yaradıb sıralamaq üçün
+            // İndekslər pozulmasın deyə olduğu kimi render edirik, sadəcə sonra HTML-i filterləyəcəyik.
+            
+            const renderedItems = items.map((item, index) => {
+                const isDone = item.done;
+                // Gecikmə Yoxlanışı: Bitməyib + Bitmə tarixi var + Tarix keçib
+                const isOverdue = !isDone && item.endDate && item.endDate < today;
+                
+                let wrapperClass = "checklist-item-wrapper";
+                let badge = "";
+
+                if (isDone) wrapperClass += " done";
+                if (isOverdue) {
+                    wrapperClass += " overdue"; // Qırmızı rəng
+                    badge = `<span class="badge-overdue"><i class="fas fa-exclamation-circle"></i> Gecikdi!</span>`;
+                }
+
+                const html = `
+                    <div class="${wrapperClass}">
+                        <div class="checklist-main-row">
+                            <input type="checkbox" ${isDone ? 'checked' : ''} onchange="updateChecklistItem(${note.id}, ${index}, 'done', this.checked)">
+                            <span style="flex:1;">${item.text}</span>
+                            ${badge}
+                            <button onclick="removeChecklistItem(${note.id}, ${index})" class="delete-sub-btn">&times;</button>
+                        </div>
+                        <div class="checklist-details-row">
+                            <div class="cl-date-group"><span class="cl-date-label">Baş:</span><input type="date" class="cl-date" value="${item.startDate||''}" onchange="updateChecklistItem(${note.id},${index},'startDate',this.value)"></div>
+                            <div class="cl-date-group"><span class="cl-date-label">Son:</span><input type="date" class="cl-date" value="${item.endDate||''}" onchange="updateChecklistItem(${note.id},${index},'endDate',this.value)"></div>
+                            <input type="text" class="cl-note" placeholder="Qeyd..." value="${item.note||''}" onchange="updateChecklistItem(${note.id},${index},'note',this.value)" style="margin-top:10px;">
+                        </div>
+                    </div>`;
+                return { html, isDone };
+            });
+
+            // Aktiv və Bitmişləri Ayırırıq
+            const activeHtml = renderedItems.filter(i => !i.isDone).map(i => i.html).join('');
+            const doneHtml = renderedItems.filter(i => i.isDone).map(i => i.html).join('');
+
+            let finalHtml = activeHtml;
+            // Əgər bitmiş varsa, onları aşağıda göstər
+            if (doneHtml) {
+                finalHtml += `<div class="completed-divider"><span>Tamamlananlar</span></div>` + doneHtml;
+            }
+
+            ch = `<div class="checklist-container">${finalHtml}<input type="text" class="add-check-input" placeholder="+ Yeni hədəf (Enter)" onkeypress="if(event.key==='Enter'){addChecklistItem(${note.id},this.value);this.value='';}"></div>`;
+        }
+        div.innerHTML = hh + ch;
+        return div;
+    }
+
+    window.deleteNote=async(id)=>{if(!confirm("Silmək?"))return;await fetch(`/api/notes/${id}`,{method:"DELETE",headers:{"Authorization":`Bearer ${token}`}});loadNotes();}; window.updateNoteText=async(id,nt)=>{await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:nt})});}; 
+    window.addChecklistItem=async(id,t)=>{if(!t.trim())return;const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=[];try{i=JSON.parse(n.content||'[]');}catch(e){i=[];} i.push({text:t,done:false,startDate:"",endDate:"",note:""});await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();}; 
+    window.updateChecklistItem=async(id,idx,f,v)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');if(i[idx]){i[idx][f]=v;await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});if(f==='done')loadNotes();}}; window.removeChecklistItem=async(id,idx)=>{const r=await fetch("/api/notes",{headers:{"Authorization":`Bearer ${token}`}});const d=await r.json();const n=d.notes.find(x=>x.id===id);let i=JSON.parse(n.content||'[]');i.splice(idx,1);await fetch(`/api/notes/${id}`,{method:"PUT",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({content:JSON.stringify(i)})});loadNotes();};
 });
