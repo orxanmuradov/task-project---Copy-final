@@ -357,3 +357,69 @@ input[type="time"] {
     color-scheme: light !important;
     color: #000 !important;
 }
+
+/* --- Kalendar üçün Məcburi DARK MODE --- */
+
+/* 1. Bütün modal pəncərələrin fonunu tünd boz edirik */
+.modal, 
+.modal-content, 
+.datepicker-modal,
+.timepicker-modal,
+div[class*="datepicker"], 
+div[class*="timepicker"] {
+    background-color: #1f1f1f !important; /* Tünd boz fon */
+    color: #ffffff !important; /* Ağ yazı */
+}
+
+/* 2. Tarix və Vaxt seçilən yuxarı başlıq hissəsi */
+.datepicker-date-display, 
+.timepicker-display,
+.date-text, 
+.year-text,
+.timepicker-display-column {
+    background-color: #121212 !important; /* Daha tünd başlıq */
+    color: #ffffff !important; /* Ağ yazı */
+}
+
+/* 3. Günlərin olduğu cədvəl */
+.datepicker-table, 
+.datepicker-day-button,
+.datepicker-calendar-container {
+    color: #ffffff !important; /* Rəqəmlər ağ olsun */
+}
+
+/* 4. Aşağıdakı düymələr (Təmizlə, Təyin et) */
+.modal-footer,
+.modal-footer .btn-flat {
+    background-color: #1f1f1f !important;
+    color: #FFC107 !important; /* Sənin Sarı rəngin */
+    font-weight: bold !important;
+}
+
+/* 5. Seçilən günün rəngi */
+.is-selected, 
+.is-today, 
+.datepicker-day-button:focus {
+    background-color: #FFC107 !important; /* Sarı fon */
+    color: #000000 !important; /* Qara yazı */
+}
+
+/* 6. Saat oxları və rəqəmləri */
+.timepicker-plate {
+    background-color: #2c2c2c !important;
+}
+.timepicker-canvas line {
+    stroke: #FFC107 !important;
+}
+.timepicker-canvas circle {
+    fill: #FFC107 !important;
+}
+.timepicker-tick {
+    color: #ffffff !important;
+}
+
+/* Hər ehtimala qarşı inputun özünü də düzəldək */
+input.datepicker, 
+input.timepicker {
+    color-scheme: dark !important;
+}
