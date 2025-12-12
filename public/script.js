@@ -1,3 +1,17 @@
+// PWA Service Worker qeydiyyatı
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => {
+        console.log('Service Worker qeydiyyatı uğurlu oldu:', registration.scope);
+      }, (err) => {
+        console.log('Service Worker qeydiyyatı uğursuz oldu:', err);
+      });
+  });
+}
+  
+
+
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
