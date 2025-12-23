@@ -231,183 +231,147 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
-    if (!token) { window.location.href = "login.html"; return; }
+    // Login yoxlaması
+    if (!token) { 
+        if (!window.location.href.includes("login.html") && !window.location.href.includes("register.html")) {
+            window.location.href = "login.html"; 
+            return;
+        }
+    }
 
     let allTasksCache = [];
     let currentPid = null;
     const modal = document.getElementById("subtask-modal");
+    const categorySelect = document.getElementById("task-category");
+    const noteTypeSelect = document.getElementById("note-type");
 
-    // 1. Tarix formatı (Azərbaycan dilində)
+    // Çıxış düyməsi
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+        logoutBtn.onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+    }
+
+    // Tarix formatı
     function formatDateAZ(dateString) {
         if (!dateString) return "";
         const date = new Date(dateString);
         return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' }) + ", " + date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 2. Gecikmə və Vaxt Yoxlaması (Rənglərin məntiqi)
-    function getTaskTimeStatus(dueDate) {
-        if (!dueDate) return "";
-        const now = new Date();
-        const due = new Date(dueDate);
-        const diff = due - now;
-        const oneDay = 24 * 60 * 60 * 1000;
-
-        if (diff < 0) return "overdue"; // Qırmızı yanacaq
-        if (diff <= oneDay) return "warning"; // Sarı olacaq
-        return "";
-    }
-
-    // 3. Bildiriş Sistemi (Background check)
-    if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
-    
-    setInterval(() => {
-        const now = new Date();
-        allTasksCache.forEach(task => {
-            if (task.status !== 'completed' && task.due_date) {
-                const due = new Date(task.due_date);
-                if (due < now && !task.notified) {
-                    new Notification("⚠️ Gecikmə!", { body: `"${task.title}" vaxtı bitib!` });
-                    task.notified = true; 
-                }
-            }
-        });
-    }, 60000);
-
-    // 4. Tapşırıqların Yüklənməsi və Renderi
+    // TAPŞIRIQLARI YÜKLƏMƏ
     async function loadTasks() {
-        const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
-        const data = await res.json();
-        allTasksCache = data.tasks || [];
-        const container = document.getElementById("tasks-container");
-        container.innerHTML = "";
+        try {
+            const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
+            if (res.status === 401) { localStorage.clear(); window.location.href = "login.html"; return; }
+            const data = await res.json();
+            allTasksCache = data.tasks || [];
+            const container = document.getElementById("tasks-container");
+            if (!container) return;
+            container.innerHTML = "";
 
-        const parents = allTasksCache.filter(t => !t.parent_id);
-        parents.forEach(parent => {
-            const ul = document.createElement("ul");
-            ul.className = "category-section";
-            renderTask(parent, ul, false);
-            
-            const myChildren = allTasksCache.filter(t => t.parent_id === parent.id);
-            if (myChildren.length > 0) {
-                const subUl = document.createElement("ul");
-                subUl.id = `subtasks-${parent.id}`;
-                subUl.style.display = "none";
-                subUl.style.paddingLeft = "25px";
-                myChildren.forEach(child => renderTask(child, subUl, true));
-                ul.appendChild(subUl);
-            }
-            container.appendChild(ul);
-        });
+            const parents = allTasksCache.filter(t => !t.parent_id);
+            parents.forEach(parent => {
+                const ul = document.createElement("ul");
+                ul.className = "category-section";
+                renderTask(parent, ul, false);
+                
+                const myChildren = allTasksCache.filter(t => t.parent_id === parent.id);
+                if (myChildren.length > 0) {
+                    const subUl = document.createElement("ul");
+                    subUl.id = `subtasks-${parent.id}`;
+                    subUl.style.display = "none";
+                    subUl.style.paddingLeft = "20px";
+                    myChildren.forEach(child => renderTask(child, subUl, true));
+                    ul.appendChild(subUl);
+                }
+                container.appendChild(ul);
+            });
+        } catch (err) { console.error("Tasklar yüklenmedi:", err); }
     }
 
     function renderTask(task, listElement, isChild) {
         const li = document.createElement("li");
         li.id = `task-${task.id}`;
         
-        // Vaxt statusuna görə klass əlavə edirik (CSS-də overdue və warning rəngləri olmalıdır)
-        const timeStatus = getTaskTimeStatus(task.due_date);
-        if (task.status === 'completed') {
-            li.className = "completed";
-        } else if (timeStatus) {
-            li.className = timeStatus; // "overdue" (qırmızı yanır) və ya "warning" (sarı)
-        }
-        
+        if (task.status === 'completed') li.className = "completed";
         if (isChild) li.classList.add('sub-task-item');
         
         let dateText = task.due_date ? `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.due_date)}` : "";
-        let recurIcon = task.recurrence ? `<span class="recur-badge"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
-
-        // Tərəqqi sayğacı (Məs: 1/3)
-        let progressBadge = "";
-        if (!isChild) {
-            const subs = allTasksCache.filter(t => t.parent_id === task.id);
-            if (subs.length > 0) {
-                const done = subs.filter(t => t.status === 'completed').length;
-                progressBadge = `<span class="count-badge">${done}/${subs.length}</span>`;
-            }
-        }
+        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
 
         li.innerHTML = `
-            <div class="task-header">
-                <div class="task-info" onclick="toggleAccordion(${task.id})">
-                    <strong>${isChild ? '↳ ' : ''}${task.title} ${progressBadge} ${recurIcon}</strong>
+            <div class="task-header" onclick="toggleAccordion(${task.id})">
+                <div class="task-info">
+                    <strong>${isChild ? '↳ ' : ''}${task.title} ${recurIcon}</strong>
                     <div class="task-meta">${dateText}</div>
                 </div>
                 <div class="actions">
-                    <button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button>
-                    <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
+                    <button onclick="event.stopPropagation(); toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn">
+                        <i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i>
+                    </button>
+                    <button onclick="event.stopPropagation(); deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; background:rgba(0,0,0,0.2);">
-                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})">+ Alt Tapşırıq Əlavə Et (Vaxtlı)</button>
+            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:12px; border-top:1px solid #333;">
+                <div style="color:#ddd; font-style:italic; margin-bottom:10px;">${task.description || 'Qeyd yoxdur.'}</div>
+                ${!isChild ? `<button class="subtask-btn" onclick="openSubtaskModal(${task.id})">+ Alt Tapşırıq</button>` : ''}
             </div>`;
         listElement.appendChild(li);
     }
 
-    // 5. Təkrarolunma və Status Dəyişməsi
-    window.toggleStatus = async (id, s, r, t, c) => {
-        const ns = s === 'completed' ? 'pending' : 'completed';
-        if (ns === 'completed' && r && r !== 'null') {
-            let next = new Date();
-            if (r === 'daily') next.setDate(next.getDate() + 1);
-            if (r === 'hourly') next.setHours(next.getHours() + 1);
-            if (r === 'weekly') next.setDate(next.getDate() + 7);
-            
-            await fetch("/api/tasks", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                body: JSON.stringify({ title: t, category: c, due_date: next.toISOString(), recurrence: r, parent_id: null })
-            });
-        }
-        await fetch(`/api/tasks/${id}/status`, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ status: ns }) });
-        loadTasks();
-    };
-
-    // 6. Modal və Alt Tapşırıq Məntiqi
-    window.openSubtaskModal = (id) => { currentPid = id; modal.style.display = "flex"; };
-    
-    document.getElementById("save-modal-btn").onclick = async () => {
-        const title = document.getElementById("modal-subtask-input").value;
-        const start = document.getElementById("modal-subtask-start").value;
-        const due = document.getElementById("modal-subtask-due").value;
-        if (!title) return;
-
-        await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, category: "general", start_date: start||null, due_date: due||null, parent_id: currentPid })
-        });
-        modal.style.display = "none";
-        document.getElementById("modal-subtask-input").value = "";
-        loadTasks();
-    };
-
-    // Digər köməkçi funksiyalar
-    window.toggleAccordion = (id) => {
-        const desc = document.getElementById(`desc-box-${id}`);
-        const sub = document.getElementById(`subtasks-${id}`);
-        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
-        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
-    };
-
-    window.deleteTask = (id) => { fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }).then(() => loadTasks()); };
-
-    window.switchTab = (t) => {
-        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
-        document.getElementById(`${t}-view`).style.display = 'flex';
-        if(t === 'tasks') loadTasks(); else loadNotes();
-    };
-
+    // KATEQORİYALARI YÜKLƏMƏ
     async function loadCategories() {
+        if (!categorySelect) return;
         categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
-        const res = await fetch("/api/categories", { headers: { "Authorization": `Bearer ${token}` } });
-        const data = await res.json();
-        if (data.categories) data.categories.forEach(c => {
-            const o = document.createElement("option"); o.value = c.name.toLowerCase(); o.textContent = c.name; categorySelect.appendChild(o);
-        });
+        try {
+            const res = await fetch("/api/categories", { headers: { "Authorization": `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.categories) {
+                data.categories.forEach(c => {
+                    const o = document.createElement("option"); o.value = c.name.toLowerCase(); o.textContent = c.name; categorySelect.appendChild(o);
+                });
+            }
+        } catch (e) { console.log("Kateqoriya xetası"); }
     }
 
-    const categorySelect = document.getElementById("task-category");
-    await loadCategories();
-    await loadTasks();
+    // QEYDLƏR VƏ HƏDƏFLƏR HİSSƏSİ
+    async function loadNotes() {
+        const container = document.getElementById("notes-list");
+        if (!container || !noteTypeSelect) return;
+        
+        try {
+            const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
+            const data = await res.json();
+            container.innerHTML = "";
+            const type = noteTypeSelect.value;
+            const filtered = (data.notes || []).filter(n => n.type === type);
+            
+            if (filtered.length === 0) { container.innerHTML = "<p>Heç nə tapılmadı.</p>"; return; }
+
+            filtered.forEach(n => {
+                const div = document.createElement("div");
+                div.className = "note-card";
+                div.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id}, this.value)">${n.content || ''}</textarea>`;
+                container.appendChild(div);
+            });
+        } catch (e) { console.log("Qeyd xetası"); }
+    }
+
+    // TAB DƏYİŞMƏ FUNKSİYASI
+    window.switchTab = (tab) => {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(`${tab}-view`).style.display = 'flex';
+        document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
+        
+        if (tab === 'tasks') loadTasks();
+        if (tab === 'notes') loadNotes();
+    };
+
+    // İLK YÜKLƏMƏ
+    if (token) {
+        await loadCategories();
+        await loadTasks();
+    }
 });
