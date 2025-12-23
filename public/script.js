@@ -230,18 +230,18 @@
 
 
 
-
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
+    let allTasksCache = [];
+    let currentPid = null;
+
     const categorySelect = document.getElementById("task-category");
     const noteTypeSelect = document.getElementById("note-type");
-    let allTasksCache = [];
+    const modal = document.getElementById("subtask-modal");
 
-    if (noteTypeSelect) {
-        noteTypeSelect.addEventListener("change", () => loadNotes());
-    }
+    if (noteTypeSelect) noteTypeSelect.addEventListener("change", () => loadNotes());
 
     function formatDateAZ(dateString) {
         if (!dateString) return "";
@@ -263,41 +263,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    async function loadCategories() {
-        categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
-        try {
-            const res = await fetch("/api/categories", { headers: { "Authorization": `Bearer ${token}` } });
-            const data = await res.json();
-            if (data.categories) {
-                data.categories.forEach(cat => {
-                    const opt = document.createElement("option"); opt.value = cat.name.toLowerCase(); opt.textContent = cat.name; categorySelect.appendChild(opt);
-                });
-            }
-        } catch (e) {}
-        const newOpt = document.createElement("option"); newOpt.value = "new_category"; newOpt.textContent = "+ Yeni"; categorySelect.appendChild(newOpt);
-    }
-
-    document.getElementById("task-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const title = document.getElementById("task-input").value;
-        const category = categorySelect.value;
-        const startDate = document.getElementById("task-start-date").value;
-        const dueDate = document.getElementById("task-due-date").value;
-        const recurrence = document.getElementById("task-recurrence").value;
-
-        const res = await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, category, start_date: startDate || null, due_date: dueDate || null, recurrence: recurrence || null, parent_id: null })
-        });
-
-        if (res.ok) {
-            document.getElementById("task-input").value = "";
-            document.getElementById("task-recurrence").value = "";
-            loadTasks();
-        }
-    });
-
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -306,19 +271,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         container.innerHTML = "";
 
         const parents = allTasksCache.filter(t => !t.parent_id);
-        const children = allTasksCache.filter(t => t.parent_id);
-
         parents.forEach(parent => {
             const ul = document.createElement("ul");
             ul.className = "category-section";
             renderTask(parent, ul, false);
             
-            const myChildren = children.filter(c => c.parent_id === parent.id);
+            const myChildren = allTasksCache.filter(t => t.parent_id === parent.id);
             if (myChildren.length > 0) {
                 const subUl = document.createElement("ul");
                 subUl.id = `subtasks-${parent.id}`;
                 subUl.style.display = "none";
-                subUl.style.paddingLeft = "20px";
+                subUl.style.paddingLeft = "25px";
                 myChildren.forEach(child => renderTask(child, subUl, true));
                 ul.appendChild(subUl);
             }
@@ -332,12 +295,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (task.status === 'completed') li.classList.add('completed');
         
         let dateText = task.due_date ? `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.due_date)}` : "";
-        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${translateRecur(task.recurrence)}</span>` : "";
+        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
+
+        let progressBadge = "";
+        if (!isChild) {
+            const subs = allTasksCache.filter(t => t.parent_id === task.id);
+            if (subs.length > 0) {
+                const done = subs.filter(t => t.status === 'completed').length;
+                progressBadge = `<span class="count-badge" style="color:#ffcc00; border:1px solid #ffcc00; padding:2px 5px; border-radius:8px; font-size:0.7rem; margin-left:5px;">${done}/${subs.length}</span>`;
+            }
+        }
 
         li.innerHTML = `
             <div class="task-header">
                 <div class="task-info" onclick="toggleAccordion(${task.id})">
-                    <strong>${isChild ? '↳ ' : ''}${task.title} ${recurIcon}</strong>
+                    <strong>${isChild ? '↳ ' : ''}${task.title} ${progressBadge} ${recurIcon}</strong>
                     <div class="task-meta">${dateText}</div>
                 </div>
                 <div class="actions">
@@ -345,15 +317,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; border-top:1px solid #333;">
-                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})" style="width:100%; background:transparent; border:1px dashed #ffcc00; color:#ffcc00; padding:5px; cursor:pointer;">+ Alt Tapşırıq</button>
+            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; background:#1a1a1a;">
+                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})" style="width:100%; background:transparent; border:1px dashed #444; color:#888; padding:8px; cursor:pointer;">+ Alt Tapşırıq</button>
             </div>`;
         listElement.appendChild(li);
-    }
-
-    function translateRecur(r) {
-        const d = { 'hourly': 'Hər saat', 'daily': 'Hər gün', 'weekly': 'Həftəlik' };
-        return d[r] || r;
     }
 
     window.toggleAccordion = (id) => {
@@ -369,6 +336,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             let next = new Date();
             if (r === 'daily') next.setDate(next.getDate() + 1);
             if (r === 'hourly') next.setHours(next.getHours() + 1);
+            if (r === 'weekly') next.setDate(next.getDate() + 7);
             await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -379,36 +347,44 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadTasks();
     };
 
+    window.openSubtaskModal = (id) => { currentPid = id; modal.style.display = "flex"; };
+    document.getElementById("close-modal-btn").onclick = () => modal.style.display = "none";
+    document.getElementById("save-modal-btn").onclick = async () => {
+        const title = document.getElementById("modal-subtask-input").value;
+        const start = document.getElementById("modal-subtask-start").value;
+        const due = document.getElementById("modal-subtask-due").value;
+        await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ title, category: "general", start_date: start||null, due_date: due||null, parent_id: currentPid })
+        });
+        modal.style.display = "none";
+        loadTasks();
+    };
+
+    window.deleteTask = (id) => { fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }).then(() => loadTasks()); };
+
     async function loadNotes() {
         const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
         const container = document.getElementById("notes-list");
         container.innerHTML = "";
         const type = noteTypeSelect.value;
-        const filtered = (data.notes || []).filter(n => n.type === type);
-        filtered.forEach(n => {
-            const div = document.createElement("div");
-            div.className = "note-card";
-            div.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id},this.value)">${n.content || ''}</textarea>`;
-            container.appendChild(div);
+        (data.notes || []).filter(n => n.type === type).forEach(n => {
+            const d = document.createElement("div"); d.className = "note-card";
+            d.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id},this.value)">${n.content||''}</textarea>`;
+            container.appendChild(d);
         });
     }
 
-    // Modal funksiyaları
-    const modal = document.getElementById("subtask-modal");
-    let currentPid = null;
-    window.openSubtaskModal = (id) => { currentPid = id; modal.style.display = "flex"; };
-    document.getElementById("close-modal-btn").onclick = () => modal.style.display = "none";
-    document.getElementById("save-modal-btn").onclick = async () => {
-        const title = document.getElementById("modal-subtask-input").value;
-        await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, category: "general", parent_id: currentPid })
+    async function loadCategories() {
+        categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
+        const res = await fetch("/api/categories", { headers: { "Authorization": `Bearer ${token}` } });
+        const data = await res.json();
+        if (data.categories) data.categories.forEach(c => {
+            const o = document.createElement("option"); o.value = c.name.toLowerCase(); o.textContent = c.name; categorySelect.appendChild(o);
         });
-        modal.style.display = "none";
-        loadTasks();
-    };
+    }
 
     await loadCategories();
     await loadTasks();

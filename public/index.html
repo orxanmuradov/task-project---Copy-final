@@ -140,19 +140,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#ffcc00">
-    <link rel="apple-touch-icon" href="./icon-192.png">
-    <link rel="icon" type="image/png" href="./icon-192.png">
 </head>
 <body>
     <div class="container">
         <header class="app-header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="icon-192.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #333;">
+                <img src="icon-192.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px;">
                 <h1 class="main-title" style="margin: 0;">Tapşırıqlar</h1>
             </div>
             <div class="user-info">
                 <span id="welcome-message"></span>
-                <button id="logout-btn" class="delete-btn" title="Çıxış"><i class="fas fa-sign-out-alt"></i></button>
+                <button id="logout-btn" class="delete-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
 
@@ -187,12 +185,6 @@
                         <input type="datetime-local" id="task-due-date">
                     </div>
                 </div>
-
-                <div id="new-cat-container" style="display: none; margin-top: 10px;">
-                    <input type="text" id="new-cat-input" placeholder="Yeni kateqoriya adı...">
-                    <div id="custom-cat-list" style="margin-top:10px;"></div>
-                </div>
-                
                 <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
             </form>
 
@@ -216,22 +208,17 @@
 
     <div id="subtask-modal" class="modal-overlay">
         <div class="modal-box">
-            <h3><i class="fas fa-level-down-alt"></i> Alt Tapşırıq</h3>
-            <input type="text" id="modal-subtask-input" placeholder="Alt tapşırığın adı...">
-            <div class="modal-buttons">
+            <h3><i class="fas fa-level-down-alt"></i> Yeni Alt Tapşırıq</h3>
+            <input type="text" id="modal-subtask-input" placeholder="Adı..." required>
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px; text-align: left;">
+                <label style="font-size: 0.8rem; color: #888;">Başlanğıc:</label>
+                <input type="datetime-local" id="modal-subtask-start" style="width:100%; background:#2b2b2b; color:white; border:1px solid #444; padding:8px; border-radius:5px;">
+                <label style="font-size: 0.8rem; color: #888;">Son Tarix:</label>
+                <input type="datetime-local" id="modal-subtask-due" style="width:100%; background:#2b2b2b; color:white; border:1px solid #444; padding:8px; border-radius:5px;">
+            </div>
+            <div class="modal-buttons" style="margin-top: 20px;">
                 <button id="close-modal-btn" class="modal-btn cancel">Ləğv et</button>
                 <button id="save-modal-btn" class="modal-btn save">Əlavə et</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirm-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3 style="color: #ff4d4d;">Diqqət!</h3>
-            <p id="confirm-message">Bunu silmək istəyirsən?</p>
-            <div class="modal-buttons">
-                <button id="confirm-no-btn" class="modal-btn cancel">Xeyr</button>
-                <button id="confirm-yes-btn" class="modal-btn delete">Bəli</button>
             </div>
         </div>
     </div>
