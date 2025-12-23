@@ -247,3 +247,28 @@ li.active .task-desc { display: block; animation: fadeIn 0.3s; }
     .container { border-radius: 0; border: none; height: 100dvh; }
     .form-row, .date-row, .checklist-details-row, .extra-options { flex-direction: column; gap: 8px; }
 }
+
+
+/* Gecikən (Qırmızı yanib-sonən) */
+li.overdue {
+    border-left: 5px solid #ff4d4d !important;
+    animation: blinker 1.5s linear infinite;
+}
+
+/* Az qalan (Sarı) */
+li.warning {
+    border-left: 5px solid #ffcc00 !important;
+}
+
+@keyframes blinker {
+    50% { opacity: 0.6; background-color: rgba(255, 77, 77, 0.1); }
+}
+
+.count-badge {
+    background: #333;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: #ffcc00;
+    border: 1px solid #444;
+}
