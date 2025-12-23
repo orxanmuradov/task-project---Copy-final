@@ -231,10 +231,9 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
-    // Login yoxlaması
-    if (!token) { 
-        if (!window.location.href.includes("login.html") && !window.location.href.includes("register.html")) {
-            window.location.href = "login.html"; 
+    if (!token) {
+        if (!window.location.href.includes("login.html")) {
+            window.location.href = "login.html";
             return;
         }
     }
@@ -245,13 +244,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const categorySelect = document.getElementById("task-category");
     const noteTypeSelect = document.getElementById("note-type");
 
-    // Çıxış düyməsi
-    const logoutBtn = document.getElementById("logout-btn");
-    if (logoutBtn) {
-        logoutBtn.onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
-    }
-
-    // Tarix formatı
     function formatDateAZ(dateString) {
         if (!dateString) return "";
         const date = new Date(dateString);
@@ -261,117 +253,163 @@ document.addEventListener("DOMContentLoaded", async () => {
     // TAPŞIRIQLARI YÜKLƏMƏ
     async function loadTasks() {
         try {
-            const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
-            if (res.status === 401) { localStorage.clear(); window.location.href = "login.html"; return; }
+            const res = await fetch("/api/tasks", { 
+                headers: { "Authorization": `Bearer ${token}` } 
+            });
+            if (res.status === 401) {
+                localStorage.clear();
+                window.location.href = "login.html";
+                return;
+            }
             const data = await res.json();
             allTasksCache = data.tasks || [];
-            const container = document.getElementById("tasks-container");
-            if (!container) return;
-            container.innerHTML = "";
+            renderTasksUI();
+        } catch (err) {
+            console.error("Task yükləmə xətası:", err);
+        }
+    }
 
-            const parents = allTasksCache.filter(t => !t.parent_id);
-            parents.forEach(parent => {
-                const ul = document.createElement("ul");
-                ul.className = "category-section";
-                renderTask(parent, ul, false);
-                
-                const myChildren = allTasksCache.filter(t => t.parent_id === parent.id);
-                if (myChildren.length > 0) {
-                    const subUl = document.createElement("ul");
-                    subUl.id = `subtasks-${parent.id}`;
-                    subUl.style.display = "none";
-                    subUl.style.paddingLeft = "20px";
-                    myChildren.forEach(child => renderTask(child, subUl, true));
-                    ul.appendChild(subUl);
-                }
-                container.appendChild(ul);
-            });
-        } catch (err) { console.error("Tasklar yüklenmedi:", err); }
+    function renderTasksUI() {
+        const container = document.getElementById("tasks-container");
+        if (!container) return;
+        container.innerHTML = "";
+
+        const parents = allTasksCache.filter(t => !t.parent_id);
+        parents.forEach(parent => {
+            const ul = document.createElement("ul");
+            ul.className = "category-section";
+            renderTask(parent, ul, false);
+            
+            const myChildren = allTasksCache.filter(t => t.parent_id === parent.id);
+            if (myChildren.length > 0) {
+                const subUl = document.createElement("ul");
+                subUl.id = `subtasks-${parent.id}`;
+                subUl.style.display = "none";
+                subUl.style.paddingLeft = "20px";
+                myChildren.forEach(child => renderTask(child, subUl, true));
+                ul.appendChild(subUl);
+            }
+            container.appendChild(ul);
+        });
     }
 
     function renderTask(task, listElement, isChild) {
         const li = document.createElement("li");
         li.id = `task-${task.id}`;
-        
         if (task.status === 'completed') li.className = "completed";
         if (isChild) li.classList.add('sub-task-item');
-        
-        let dateText = task.due_date ? `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.due_date)}` : "";
-        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
+
+        const now = new Date();
+        const due = task.due_date ? new Date(task.due_date) : null;
+        if (due && task.status !== 'completed') {
+            if (due < now) li.classList.add("overdue");
+            else if (due - now < 86400000) li.classList.add("warning");
+        }
+
+        let progress = "";
+        if (!isChild) {
+            const subs = allTasksCache.filter(t => t.parent_id === task.id);
+            if (subs.length > 0) {
+                const done = subs.filter(t => t.status === 'completed').length;
+                progress = `<span class="count-badge">${done}/${subs.length}</span>`;
+            }
+        }
 
         li.innerHTML = `
             <div class="task-header" onclick="toggleAccordion(${task.id})">
                 <div class="task-info">
-                    <strong>${isChild ? '↳ ' : ''}${task.title} ${recurIcon}</strong>
-                    <div class="task-meta">${dateText}</div>
+                    <strong>${isChild ? '↳ ' : ''}${task.title} ${progress}</strong>
+                    <div class="task-meta">${task.due_date ? formatDateAZ(task.due_date) : ''}</div>
                 </div>
                 <div class="actions">
-                    <button onclick="event.stopPropagation(); toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn">
+                    <button onclick="event.stopPropagation(); toggleStatus(${task.id},'${task.status}')" class="check-btn">
                         <i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i>
                     </button>
                     <button onclick="event.stopPropagation(); deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:12px; border-top:1px solid #333;">
-                <div style="color:#ddd; font-style:italic; margin-bottom:10px;">${task.description || 'Qeyd yoxdur.'}</div>
+            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:12px; background:rgba(0,0,0,0.2);">
+                <p style="margin-bottom:10px; color:#ccc;">${task.description || 'Qeyd yoxdur.'}</p>
                 ${!isChild ? `<button class="subtask-btn" onclick="openSubtaskModal(${task.id})">+ Alt Tapşırıq</button>` : ''}
             </div>`;
         listElement.appendChild(li);
     }
 
-    // KATEQORİYALARI YÜKLƏMƏ
-    async function loadCategories() {
-        if (!categorySelect) return;
-        categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
-        try {
-            const res = await fetch("/api/categories", { headers: { "Authorization": `Bearer ${token}` } });
-            const data = await res.json();
-            if (data.categories) {
-                data.categories.forEach(c => {
-                    const o = document.createElement("option"); o.value = c.name.toLowerCase(); o.textContent = c.name; categorySelect.appendChild(o);
+    // YENİ TASK YARATMA
+    const taskForm = document.getElementById("task-form");
+    if (taskForm) {
+        taskForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("task-input").value;
+            const category = categorySelect.value;
+            const due = document.getElementById("task-due-date").value;
+            const recur = document.getElementById("task-recurrence").value;
+
+            try {
+                const res = await fetch("/api/tasks", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    body: JSON.stringify({ title, category, due_date: due || null, recurrence: recur || null })
                 });
-            }
-        } catch (e) { console.log("Kateqoriya xetası"); }
+                if (res.ok) {
+                    taskForm.reset();
+                    await loadTasks();
+                }
+            } catch (err) { console.error("Yaratma xətası:", err); }
+        };
     }
 
-    // QEYDLƏR VƏ HƏDƏFLƏR HİSSƏSİ
+    // QEYDLƏR VƏ HƏDƏFLƏR
     async function loadNotes() {
         const container = document.getElementById("notes-list");
         if (!container || !noteTypeSelect) return;
-        
         try {
             const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
             const data = await res.json();
-            container.innerHTML = "";
             const type = noteTypeSelect.value;
-            const filtered = (data.notes || []).filter(n => n.type === type);
-            
-            if (filtered.length === 0) { container.innerHTML = "<p>Heç nə tapılmadı.</p>"; return; }
-
-            filtered.forEach(n => {
-                const div = document.createElement("div");
-                div.className = "note-card";
-                div.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id}, this.value)">${n.content || ''}</textarea>`;
-                container.appendChild(div);
+            container.innerHTML = "";
+            (data.notes || []).filter(n => n.type === type).forEach(n => {
+                const card = document.createElement("div");
+                card.className = "note-card";
+                card.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id}, this.value)">${n.content || ''}</textarea>`;
+                container.appendChild(card);
             });
-        } catch (e) { console.log("Qeyd xetası"); }
+        } catch (e) { console.error("Qeyd xətası:", e); }
     }
 
-    // TAB DƏYİŞMƏ FUNKSİYASI
-    window.switchTab = (tab) => {
-        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById(`${tab}-view`).style.display = 'flex';
-        document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
-        
-        if (tab === 'tasks') loadTasks();
-        if (tab === 'notes') loadNotes();
+    window.toggleAccordion = (id) => {
+        const desc = document.getElementById(`desc-box-${id}`);
+        const sub = document.getElementById(`subtasks-${id}`);
+        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
+        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
     };
 
-    // İLK YÜKLƏMƏ
-    if (token) {
-        await loadCategories();
-        await loadTasks();
+    window.toggleStatus = async (id, s) => {
+        const ns = s === 'completed' ? 'pending' : 'completed';
+        await fetch(`/api/tasks/${id}/status`, { 
+            method: "PUT", 
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, 
+            body: JSON.stringify({ status: ns }) 
+        });
+        loadTasks();
+    };
+
+    window.deleteTask = (id) => {
+        fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }).then(loadTasks);
+    };
+
+    window.switchTab = (tab) => {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById(`${tab}-view`).style.display = 'flex';
+        if (tab === 'tasks') loadTasks(); else loadNotes();
+    };
+
+    // Kateqoriya yükləmə (dropdown-un dolması üçün mütləqdir)
+    async function loadCategories() {
+        if (!categorySelect) return;
+        categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
     }
+
+    await loadCategories();
+    await loadTasks();
 });
