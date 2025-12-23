@@ -229,40 +229,51 @@
 
 
 
-
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
     let allTasksCache = [];
     let currentPid = null;
-
-    const categorySelect = document.getElementById("task-category");
-    const noteTypeSelect = document.getElementById("note-type");
     const modal = document.getElementById("subtask-modal");
 
-    if (noteTypeSelect) noteTypeSelect.addEventListener("change", () => loadNotes());
-
+    // 1. Tarix formatı (Azərbaycan dilində)
     function formatDateAZ(dateString) {
         if (!dateString) return "";
         const date = new Date(dateString);
         return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' }) + ", " + date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
     }
 
-    window.switchTab = (tabName) => {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.view-section').forEach(view => view.style.display = 'none');
-        if (tabName === 'tasks') {
-            document.getElementById('tasks-view').style.display = 'flex';
-            document.querySelector("button[onclick=\"switchTab('tasks')\"]").classList.add('active');
-            loadTasks();
-        } else {
-            document.getElementById('notes-view').style.display = 'flex';
-            document.querySelector("button[onclick=\"switchTab('notes')\"]").classList.add('active');
-            loadNotes();
-        }
-    };
+    // 2. Gecikmə və Vaxt Yoxlaması (Rənglərin məntiqi)
+    function getTaskTimeStatus(dueDate) {
+        if (!dueDate) return "";
+        const now = new Date();
+        const due = new Date(dueDate);
+        const diff = due - now;
+        const oneDay = 24 * 60 * 60 * 1000;
 
+        if (diff < 0) return "overdue"; // Qırmızı yanacaq
+        if (diff <= oneDay) return "warning"; // Sarı olacaq
+        return "";
+    }
+
+    // 3. Bildiriş Sistemi (Background check)
+    if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
+    
+    setInterval(() => {
+        const now = new Date();
+        allTasksCache.forEach(task => {
+            if (task.status !== 'completed' && task.due_date) {
+                const due = new Date(task.due_date);
+                if (due < now && !task.notified) {
+                    new Notification("⚠️ Gecikmə!", { body: `"${task.title}" vaxtı bitib!` });
+                    task.notified = true; 
+                }
+            }
+        });
+    }, 60000);
+
+    // 4. Tapşırıqların Yüklənməsi və Renderi
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -292,17 +303,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderTask(task, listElement, isChild) {
         const li = document.createElement("li");
         li.id = `task-${task.id}`;
-        if (task.status === 'completed') li.classList.add('completed');
+        
+        // Vaxt statusuna görə klass əlavə edirik (CSS-də overdue və warning rəngləri olmalıdır)
+        const timeStatus = getTaskTimeStatus(task.due_date);
+        if (task.status === 'completed') {
+            li.className = "completed";
+        } else if (timeStatus) {
+            li.className = timeStatus; // "overdue" (qırmızı yanır) və ya "warning" (sarı)
+        }
+        
+        if (isChild) li.classList.add('sub-task-item');
         
         let dateText = task.due_date ? `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.due_date)}` : "";
-        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
+        let recurIcon = task.recurrence ? `<span class="recur-badge"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
 
+        // Tərəqqi sayğacı (Məs: 1/3)
         let progressBadge = "";
         if (!isChild) {
             const subs = allTasksCache.filter(t => t.parent_id === task.id);
             if (subs.length > 0) {
                 const done = subs.filter(t => t.status === 'completed').length;
-                progressBadge = `<span class="count-badge" style="color:#ffcc00; border:1px solid #ffcc00; padding:2px 5px; border-radius:8px; font-size:0.7rem; margin-left:5px;">${done}/${subs.length}</span>`;
+                progressBadge = `<span class="count-badge">${done}/${subs.length}</span>`;
             }
         }
 
@@ -317,19 +338,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; background:#1a1a1a;">
-                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})" style="width:100%; background:transparent; border:1px dashed #444; color:#888; padding:8px; cursor:pointer;">+ Alt Tapşırıq</button>
+            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; background:rgba(0,0,0,0.2);">
+                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})">+ Alt Tapşırıq Əlavə Et (Vaxtlı)</button>
             </div>`;
         listElement.appendChild(li);
     }
 
-    window.toggleAccordion = (id) => {
-        const desc = document.getElementById(`desc-box-${id}`);
-        const sub = document.getElementById(`subtasks-${id}`);
-        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
-        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
-    };
-
+    // 5. Təkrarolunma və Status Dəyişməsi
     window.toggleStatus = async (id, s, r, t, c) => {
         const ns = s === 'completed' ? 'pending' : 'completed';
         if (ns === 'completed' && r && r !== 'null') {
@@ -337,6 +352,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (r === 'daily') next.setDate(next.getDate() + 1);
             if (r === 'hourly') next.setHours(next.getHours() + 1);
             if (r === 'weekly') next.setDate(next.getDate() + 7);
+            
             await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -347,35 +363,40 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadTasks();
     };
 
+    // 6. Modal və Alt Tapşırıq Məntiqi
     window.openSubtaskModal = (id) => { currentPid = id; modal.style.display = "flex"; };
-    document.getElementById("close-modal-btn").onclick = () => modal.style.display = "none";
+    
     document.getElementById("save-modal-btn").onclick = async () => {
         const title = document.getElementById("modal-subtask-input").value;
         const start = document.getElementById("modal-subtask-start").value;
         const due = document.getElementById("modal-subtask-due").value;
+        if (!title) return;
+
         await fetch("/api/tasks", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ title, category: "general", start_date: start||null, due_date: due||null, parent_id: currentPid })
         });
         modal.style.display = "none";
+        document.getElementById("modal-subtask-input").value = "";
         loadTasks();
+    };
+
+    // Digər köməkçi funksiyalar
+    window.toggleAccordion = (id) => {
+        const desc = document.getElementById(`desc-box-${id}`);
+        const sub = document.getElementById(`subtasks-${id}`);
+        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
+        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
     };
 
     window.deleteTask = (id) => { fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }).then(() => loadTasks()); };
 
-    async function loadNotes() {
-        const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
-        const data = await res.json();
-        const container = document.getElementById("notes-list");
-        container.innerHTML = "";
-        const type = noteTypeSelect.value;
-        (data.notes || []).filter(n => n.type === type).forEach(n => {
-            const d = document.createElement("div"); d.className = "note-card";
-            d.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id},this.value)">${n.content||''}</textarea>`;
-            container.appendChild(d);
-        });
-    }
+    window.switchTab = (t) => {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById(`${t}-view`).style.display = 'flex';
+        if(t === 'tasks') loadTasks(); else loadNotes();
+    };
 
     async function loadCategories() {
         categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
@@ -386,6 +407,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    const categorySelect = document.getElementById("task-category");
     await loadCategories();
     await loadTasks();
 });
