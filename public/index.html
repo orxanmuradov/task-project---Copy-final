@@ -129,12 +129,12 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="az">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="color-scheme" content="dark light">
     <title>Tapşırıqlarım</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -163,7 +163,7 @@
             <form id="task-form">
                 <div class="form-row" style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" id="task-input" placeholder="Yeni tapşırıq başlığı..." required style="flex: 2;">
+                        <input type="text" id="task-input" placeholder="Yeni tapşırıq..." required style="flex: 2;">
                         <select id="task-category" style="flex: 1;"></select>
                     </div>
                     <select id="task-recurrence" style="width: 100%; background: #2b2b2b; color: white; border: 1px solid #444; border-radius: 8px; padding: 10px;">
@@ -173,35 +173,19 @@
                         <option value="monthly">Aylıq</option>
                         <option value="hourly">Hər saat</option>
                     </select>
+                    <textarea id="task-desc-input" placeholder="Tapşırıq haqqında qeyd (isteğe bağlı)..." style="width: 100%; background: #2b2b2b; color: white; border: 1px solid #444; border-radius: 8px; padding: 10px; min-height: 60px;"></textarea>
                 </div>
                 
                 <div class="date-row">
-                    <div class="date-group">
-                        <label>Başlanğıc:</label>
-                        <input type="datetime-local" id="task-start-date">
-                    </div>
-                    <div class="date-group">
-                        <label>Son Tarix:</label>
-                        <input type="datetime-local" id="task-due-date">
-                    </div>
+                    <div class="date-group"><label>Başlanğıc:</label><input type="datetime-local" id="task-start-date"></div>
+                    <div class="date-group"><label>Son Tarix:</label><input type="datetime-local" id="task-due-date"></div>
                 </div>
                 <button type="submit" class="add-btn"><i class="fas fa-plus"></i> Əlavə et</button>
             </form>
-
             <div id="tasks-container" style="margin-top: 25px;"></div>
         </div>
 
         <div id="notes-view" class="view-section" style="display: none;">
-            <form id="note-form">
-                <input type="text" id="note-title" placeholder="Başlıq..." required>
-                <div class="form-row" style="margin-top: 10px;">
-                    <select id="note-type">
-                        <option value="text">📝 Sadə Mətn</option>
-                        <option value="checklist">✅ Hədəf (Checklist)</option>
-                    </select>
-                    <button type="submit" class="add-btn" style="margin-top:0;">Yarat</button>
-                </div>
-            </form>
             <div id="notes-list" class="notes-grid"></div>
         </div>
     </div>
@@ -209,12 +193,12 @@
     <div id="subtask-modal" class="modal-overlay">
         <div class="modal-box">
             <h3><i class="fas fa-level-down-alt"></i> Yeni Alt Tapşırıq</h3>
-            <input type="text" id="modal-subtask-input" placeholder="Adı..." required>
+            <input type="text" id="modal-subtask-input" placeholder="Alt tapşırıq adı..." required>
+            <textarea id="modal-subtask-desc" placeholder="Alt tapşırıq haqqında qeyd..." style="width: 100%; margin-top: 10px; background: #2b2b2b; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px;"></textarea>
+            
             <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px; text-align: left;">
-                <label style="font-size: 0.8rem; color: #888;">Başlanğıc:</label>
-                <input type="datetime-local" id="modal-subtask-start" style="width:100%; background:#2b2b2b; color:white; border:1px solid #444; padding:8px; border-radius:5px;">
-                <label style="font-size: 0.8rem; color: #888;">Son Tarix:</label>
-                <input type="datetime-local" id="modal-subtask-due" style="width:100%; background:#2b2b2b; color:white; border:1px solid #444; padding:8px; border-radius:5px;">
+                <label>Başlanğıc:</label><input type="datetime-local" id="modal-subtask-start">
+                <label>Son Tarix:</label><input type="datetime-local" id="modal-subtask-due">
             </div>
             <div class="modal-buttons" style="margin-top: 20px;">
                 <button id="close-modal-btn" class="modal-btn cancel">Ləğv et</button>
