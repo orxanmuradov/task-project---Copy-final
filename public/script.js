@@ -236,24 +236,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     let allTasksCache = [];
     let currentPid = null;
     const modal = document.getElementById("subtask-modal");
-    const categorySelect = document.getElementById("task-category");
 
+    // 1. Tarix formatı (Azərbaycan dilində)
     function formatDateAZ(dateString) {
         if (!dateString) return "";
         const date = new Date(dateString);
         return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' }) + ", " + date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
     }
 
+    // 2. Gecikmə və Vaxt Yoxlaması (Rənglərin məntiqi)
     function getTaskTimeStatus(dueDate) {
         if (!dueDate) return "";
         const now = new Date();
         const due = new Date(dueDate);
         const diff = due - now;
-        if (diff < 0) return "overdue";
-        if (diff <= 86400000) return "warning";
+        const oneDay = 24 * 60 * 60 * 1000;
+
+        if (diff < 0) return "overdue"; // Qırmızı yanacaq
+        if (diff <= oneDay) return "warning"; // Sarı olacaq
         return "";
     }
 
+    // 3. Bildiriş Sistemi (Background check)
+    if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
+    
+    setInterval(() => {
+        const now = new Date();
+        allTasksCache.forEach(task => {
+            if (task.status !== 'completed' && task.due_date) {
+                const due = new Date(task.due_date);
+                if (due < now && !task.notified) {
+                    new Notification("⚠️ Gecikmə!", { body: `"${task.title}" vaxtı bitib!` });
+                    task.notified = true; 
+                }
+            }
+        });
+    }, 60000);
+
+    // 4. Tapşırıqların Yüklənməsi və Renderi
     async function loadTasks() {
         const res = await fetch("/api/tasks", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
@@ -272,7 +292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const subUl = document.createElement("ul");
                 subUl.id = `subtasks-${parent.id}`;
                 subUl.style.display = "none";
-                subUl.style.paddingLeft = "20px";
+                subUl.style.paddingLeft = "25px";
                 myChildren.forEach(child => renderTask(child, subUl, true));
                 ul.appendChild(subUl);
             }
@@ -284,17 +304,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         const li = document.createElement("li");
         li.id = `task-${task.id}`;
         
+        // Vaxt statusuna görə klass əlavə edirik (CSS-də overdue və warning rəngləri olmalıdır)
         const timeStatus = getTaskTimeStatus(task.due_date);
         if (task.status === 'completed') {
             li.className = "completed";
         } else if (timeStatus) {
-            li.className = timeStatus;
+            li.className = timeStatus; // "overdue" (qırmızı yanır) və ya "warning" (sarı)
         }
+        
         if (isChild) li.classList.add('sub-task-item');
         
         let dateText = task.due_date ? `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.due_date)}` : "";
-        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
+        let recurIcon = task.recurrence ? `<span class="recur-badge"><i class="fas fa-sync-alt"></i> ${task.recurrence}</span>` : "";
 
+        // Tərəqqi sayğacı (Məs: 1/3)
         let progressBadge = "";
         if (!isChild) {
             const subs = allTasksCache.filter(t => t.parent_id === task.id);
@@ -305,40 +328,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         li.innerHTML = `
-            <div class="task-header" onclick="toggleAccordion(${task.id})">
-                <div class="task-info">
+            <div class="task-header">
+                <div class="task-info" onclick="toggleAccordion(${task.id})">
                     <strong>${isChild ? '↳ ' : ''}${task.title} ${progressBadge} ${recurIcon}</strong>
                     <div class="task-meta">${dateText}</div>
                 </div>
                 <div class="actions">
-                    <button onclick="event.stopPropagation(); toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn">
-                        <i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i>
-                    </button>
-                    <button onclick="event.stopPropagation(); deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
+                    <button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button>
+                    <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:12px; background:rgba(255,255,255,0.03); border-top:1px solid #333;">
-                <div style="margin-bottom:10px; color:#ddd; font-style:italic;">
-                    <i class="fas fa-sticky-note" style="color:#ffcc00;"></i> ${task.description || 'Qeyd yoxdur.'}
-                </div>
-                ${!isChild ? `<button class="subtask-btn" onclick="openSubtaskModal(${task.id})" style="width:100%; border:1px dashed #555; background:none; color:#aaa; padding:5px; cursor:pointer;">+ Alt Tapşırıq</button>` : ''}
+            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; background:rgba(0,0,0,0.2);">
+                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})">+ Alt Tapşırıq Əlavə Et (Vaxtlı)</button>
             </div>`;
         listElement.appendChild(li);
     }
 
-    window.toggleAccordion = (id) => {
-        const desc = document.getElementById(`desc-box-${id}`);
-        const sub = document.getElementById(`subtasks-${id}`);
-        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
-        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
-    };
-
+    // 5. Təkrarolunma və Status Dəyişməsi
     window.toggleStatus = async (id, s, r, t, c) => {
         const ns = s === 'completed' ? 'pending' : 'completed';
         if (ns === 'completed' && r && r !== 'null') {
             let next = new Date();
             if (r === 'daily') next.setDate(next.getDate() + 1);
             if (r === 'hourly') next.setHours(next.getHours() + 1);
+            if (r === 'weekly') next.setDate(next.getDate() + 7);
+            
             await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -349,11 +363,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadTasks();
     };
 
+    // 6. Modal və Alt Tapşırıq Məntiqi
     window.openSubtaskModal = (id) => { currentPid = id; modal.style.display = "flex"; };
     
     document.getElementById("save-modal-btn").onclick = async () => {
         const title = document.getElementById("modal-subtask-input").value;
-        const desc = document.getElementById("modal-subtask-desc").value;
         const start = document.getElementById("modal-subtask-start").value;
         const due = document.getElementById("modal-subtask-due").value;
         if (!title) return;
@@ -361,31 +375,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         await fetch("/api/tasks", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, description: desc, category: "general", start_date: start||null, due_date: due||null, parent_id: currentPid })
+            body: JSON.stringify({ title, category: "general", start_date: start||null, due_date: due||null, parent_id: currentPid })
         });
         modal.style.display = "none";
         document.getElementById("modal-subtask-input").value = "";
         loadTasks();
     };
 
-    document.getElementById("task-form").onsubmit = async (e) => {
-        e.preventDefault();
-        const title = document.getElementById("task-input").value;
-        const desc = document.getElementById("task-desc-input").value;
-        const category = categorySelect.value;
-        const due = document.getElementById("task-due-date").value;
-        const recur = document.getElementById("task-recurrence").value;
-
-        await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ title, description: desc, category, due_date: due || null, recurrence: recur || null, parent_id: null })
-        });
-        e.target.reset();
-        loadTasks();
+    // Digər köməkçi funksiyalar
+    window.toggleAccordion = (id) => {
+        const desc = document.getElementById(`desc-box-${id}`);
+        const sub = document.getElementById(`subtasks-${id}`);
+        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
+        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
     };
 
-    window.deleteTask = (id) => fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }).then(loadTasks);
+    window.deleteTask = (id) => { fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } }).then(() => loadTasks()); };
+
+    window.switchTab = (t) => {
+        document.querySelectorAll('.view-section').forEach(v => v.style.display = 'none');
+        document.getElementById(`${t}-view`).style.display = 'flex';
+        if(t === 'tasks') loadTasks(); else loadNotes();
+    };
 
     async function loadCategories() {
         categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
@@ -396,6 +407,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    const categorySelect = document.getElementById("task-category");
     await loadCategories();
     await loadTasks();
 });
