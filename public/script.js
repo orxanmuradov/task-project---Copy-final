@@ -231,155 +231,70 @@
 
 
 
-// PWA Service Worker qeydiyyatı
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then((registration) => { console.log('Service Worker qeydiyyatı uğurlu oldu:', registration.scope); }, 
-            (err) => { console.log('Service Worker qeydiyyatı uğursuz oldu:', err); });
-    });
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) { window.location.href = "login.html"; return; }
 
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        document.getElementById("welcome-message").textContent = `Xoş gəldin, ${payload.username}`;
-    } catch(e) {}
-
-    document.getElementById("logout-btn").addEventListener("click", () => { localStorage.clear(); window.location.href = "login.html"; });
-
-    function formatDateAZ(dateString) {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short', year: 'numeric' }) + ", " + date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
-
-    // Qeyd növü dəyişəndə siyahını yeniləmək üçün dinləyici
+    const categorySelect = document.getElementById("task-category");
     const noteTypeSelect = document.getElementById("note-type");
+    let allTasksCache = [];
+
     if (noteTypeSelect) {
         noteTypeSelect.addEventListener("change", () => loadNotes());
     }
 
-    async function checkDeadlines() {
-        if (Notification.permission !== "granted") return;
-        const now = new Date();
-        const oneDayMs = 24 * 60 * 60 * 1000;
-        const notifiedItems = JSON.parse(localStorage.getItem("notifiedItems") || "[]");
-
-        const checkItem = (itemDate, title, idPrefix) => {
-            if (!itemDate) return;
-            const due = new Date(itemDate);
-            const diff = due - now;
-            const uniqueKey = `${idPrefix}-${itemDate}`;
-            if (notifiedItems.includes(uniqueKey)) return;
-
-            if (diff < 0) {
-                sendNotification("⚠️ Gecikmə!", `"${title}" vaxtı bitib!`);
-                notifiedItems.push(uniqueKey);
-            } else if (diff <= oneDayMs) {
-                sendNotification("⏳ Az Qalıb!", `"${title}" bitməsinə 24 saatdan az qalıb!`);
-                notifiedItems.push(uniqueKey);
-            }
-        };
-
-        if (allTasksCache.length > 0) { allTasksCache.forEach(task => { if (task.status !== 'completed') checkItem(task.due_date, task.title, `task-${task.id}`); }); }
-        try { 
-            const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } }); 
-            const data = await res.json(); 
-            if (data.notes) { 
-                data.notes.filter(n => n.type === 'checklist').forEach(note => { 
-                    let items = []; try { items = JSON.parse(note.content || '[]'); } catch(e) {} 
-                    items.forEach((item, index) => { if (!item.done) checkItem(item.endDate, item.text, `check-${note.id}-${index}`); }); 
-                }); 
-            } 
-        } catch(e) {}
-        localStorage.setItem("notifiedItems", JSON.stringify(notifiedItems));
+    function formatDateAZ(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toLocaleDateString('az-AZ', { day: 'numeric', month: 'short' }) + ", " + date.toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' });
     }
-    
-    function sendNotification(title, body) { const n = new Notification(title, { body: body, icon: "https://cdn-icons-png.flaticon.com/512/3239/3239952.png" }); n.onclick = () => window.focus(); }
-    setInterval(checkDeadlines, 60000);
 
     window.switchTab = (tabName) => {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(view => view.style.display = 'none');
-        if (tabName === 'tasks') { 
-            document.getElementById('tasks-view').style.display = 'flex'; 
-            document.querySelector("button[onclick=\"switchTab('tasks')\"]").classList.add('active'); 
-            loadTasks(); 
-        } else { 
-            document.getElementById('notes-view').style.display = 'flex'; 
-            document.querySelector("button[onclick=\"switchTab('notes')\"]").classList.add('active'); 
-            loadNotes(); 
+        if (tabName === 'tasks') {
+            document.getElementById('tasks-view').style.display = 'flex';
+            document.querySelector("button[onclick=\"switchTab('tasks')\"]").classList.add('active');
+            loadTasks();
+        } else {
+            document.getElementById('notes-view').style.display = 'flex';
+            document.querySelector("button[onclick=\"switchTab('notes')\"]").classList.add('active');
+            loadNotes();
         }
     };
 
-    const categorySelect = document.getElementById("task-category");
-    const newCatContainer = document.getElementById("new-cat-container");
-    const newCatInput = document.getElementById("new-cat-input");
-    const customCatList = document.getElementById("custom-cat-list");
-    let allTasksCache = [];
-
-    await loadCategories();
-    await loadTasks();
-
     async function loadCategories() {
-        categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option><option value="shopping">Alış-veriş</option>`;
-        customCatList.innerHTML = "";
+        categorySelect.innerHTML = `<option value="general">Ümumi</option><option value="work">İş</option><option value="home">Ev</option>`;
         try {
             const res = await fetch("/api/categories", { headers: { "Authorization": `Bearer ${token}` } });
             const data = await res.json();
             if (data.categories) {
                 data.categories.forEach(cat => {
                     const opt = document.createElement("option"); opt.value = cat.name.toLowerCase(); opt.textContent = cat.name; categorySelect.appendChild(opt);
-                    const tag = document.createElement("div"); tag.className = "cat-tag"; tag.innerHTML = `${cat.name} <button class="delete-cat-btn" data-id="${cat.id}" data-name="${cat.name}">&times;</button>`; customCatList.appendChild(tag);
                 });
-                document.querySelectorAll('.delete-cat-btn').forEach(btn => { btn.addEventListener('click', (e) => { e.stopPropagation(); deleteCategory(btn.getAttribute('data-id'), btn.getAttribute('data-name')); }); });
             }
         } catch (e) {}
-        const newOpt = document.createElement("option"); newOpt.value = "new_category"; newOpt.textContent = "+ Yeni Kateqoriya"; newOpt.style.color = "#ffcc00"; categorySelect.appendChild(newOpt);
+        const newOpt = document.createElement("option"); newOpt.value = "new_category"; newOpt.textContent = "+ Yeni"; categorySelect.appendChild(newOpt);
     }
 
-    categorySelect.addEventListener("change", () => { if (categorySelect.value === "new_category") { newCatContainer.style.display = "block"; newCatInput.focus(); } else { newCatContainer.style.display = "none"; } });
-
-    // YENİ TASK YARATMA (Təkrar dəstəyi ilə)
     document.getElementById("task-form").addEventListener("submit", async (e) => {
         e.preventDefault();
-        let title = document.getElementById("task-input").value; 
-        let category = categorySelect.value;
-        let startDate = document.getElementById("task-start-date").value;
-        let dueDate = document.getElementById("task-due-date").value;
-        let recurrence = document.getElementById("task-recurrence").value; // Təkrarı götürürük
+        const title = document.getElementById("task-input").value;
+        const category = categorySelect.value;
+        const startDate = document.getElementById("task-start-date").value;
+        const dueDate = document.getElementById("task-due-date").value;
+        const recurrence = document.getElementById("task-recurrence").value;
 
-        if (category === "new_category") { 
-            const newCat = newCatInput.value.trim(); 
-            if(!newCat) return; 
-            const r = await fetch("/api/categories", { method:"POST", headers:{"Content-Type":"application/json", "Authorization":`Bearer ${token}`}, body:JSON.stringify({name:newCat}) }); 
-            if(r.ok) { await loadCategories(); category=newCat.toLowerCase(); categorySelect.value=category; newCatContainer.style.display="none"; newCatInput.value=""; } else return; 
-        }
-
-        const res = await fetch("/api/tasks", { 
-            method: "POST", 
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, 
-            body: JSON.stringify({ 
-                title, category, description:"", 
-                start_date: startDate || null, 
-                due_date: dueDate || null, 
-                recurrence: recurrence || null, 
-                parent_id:null 
-            }) 
+        const res = await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ title, category, start_date: startDate || null, due_date: dueDate || null, recurrence: recurrence || null, parent_id: null })
         });
 
-        if (res.ok) { 
-            document.getElementById("task-input").value=""; 
-            document.getElementById("task-start-date").value=""; 
-            document.getElementById("task-due-date").value=""; 
-            document.getElementById("task-recurrence").value=""; 
-            loadTasks(); 
+        if (res.ok) {
+            document.getElementById("task-input").value = "";
+            document.getElementById("task-recurrence").value = "";
+            loadTasks();
         }
     });
 
@@ -388,107 +303,113 @@ document.addEventListener("DOMContentLoaded", async () => {
         const data = await res.json();
         allTasksCache = data.tasks || [];
         const container = document.getElementById("tasks-container");
-        if (!container) return; container.innerHTML = "";
-        
+        container.innerHTML = "";
+
         const parents = allTasksCache.filter(t => !t.parent_id);
         const children = allTasksCache.filter(t => t.parent_id);
-        const grouped = {};
-        parents.forEach(task => { const catKey = (task.category || 'general').toLowerCase(); if (!grouped[catKey]) grouped[catKey] = []; grouped[catKey].push(task); });
-        
-        Object.keys(grouped).forEach(catKey => {
-            const tasksInGroup = grouped[catKey];
-            if (tasksInGroup.length > 0) {
-                const section = document.createElement("div"); section.className = "category-section";
-                const displayName = catKey.charAt(0).toUpperCase() + catKey.slice(1);
-                const header = document.createElement("h3"); header.className = "category-header"; header.innerHTML = `<span>${translate(displayName)}</span> <span class="count-badge">${tasksInGroup.length}</span>`;
-                const ul = document.createElement("ul");
-                tasksInGroup.forEach(parent => {
-                    renderTask(parent, ul, false);
-                    const myChildren = children.filter(c => c.parent_id === parent.id);
-                    if (myChildren.length > 0) { 
-                        const subUl = document.createElement("ul"); subUl.className = "subtask-container"; subUl.id = `subtasks-${parent.id}`; 
-                        myChildren.forEach(child => renderTask(child, subUl, true)); 
-                        ul.appendChild(subUl); 
-                    }
-                });
-                section.appendChild(header); section.appendChild(ul); container.appendChild(section);
+
+        parents.forEach(parent => {
+            const ul = document.createElement("ul");
+            ul.className = "category-section";
+            renderTask(parent, ul, false);
+            
+            const myChildren = children.filter(c => c.parent_id === parent.id);
+            if (myChildren.length > 0) {
+                const subUl = document.createElement("ul");
+                subUl.id = `subtasks-${parent.id}`;
+                subUl.style.display = "none";
+                subUl.style.paddingLeft = "20px";
+                myChildren.forEach(child => renderTask(child, subUl, true));
+                ul.appendChild(subUl);
             }
+            container.appendChild(ul);
         });
     }
 
-    function translate(text) { const dict = { 'General': 'Ümumi', 'Work': 'İş', 'Home': 'Ev', 'Shopping': 'Alış-veriş' }; return dict[text] || text; }
-
     function renderTask(task, listElement, isChild) {
-        const li = document.createElement("li"); li.id = `task-${task.id}`; 
-        if(task.status==='completed') li.classList.add('completed'); 
-        if(isChild) li.classList.add('sub-task-item');
+        const li = document.createElement("li");
+        li.id = `task-${task.id}`;
+        if (task.status === 'completed') li.classList.add('completed');
         
-        let dateText = "";
-        if (task.start_date && task.due_date) dateText = `${formatDateAZ(task.start_date)} - ${formatDateAZ(task.due_date)}`;
-        else if (task.due_date) dateText = `Son: ${formatDateAZ(task.due_date)}`;
-        
-        // Təkrarolunma İkonu
-        let recurIcon = task.recurrence ? `<span title="${translateRecurrence(task.recurrence)}" style="color: #ffcc00; margin-left: 8px;"><i class="fas fa-sync-alt"></i> Hər gün</span>` : "";
+        let dateText = task.due_date ? `<i class="far fa-calendar-alt"></i> ${formatDateAZ(task.due_date)}` : "";
+        let recurIcon = task.recurrence ? `<span style="color:#ffcc00; margin-left:8px;"><i class="fas fa-sync-alt"></i> ${translateRecur(task.recurrence)}</span>` : "";
 
-        li.innerHTML = `<div class="task-header"><div class="task-info" onclick="toggleAccordion(${task.id})"><strong>${isChild?'<i class="fas fa-level-up-alt fa-rotate-90"></i>':''} ${task.title} ${recurIcon}</strong><div class="task-meta">${dateText}</div></div><div class="actions"><button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button><button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button></div></div><div class="task-desc" id="desc-box-${task.id}">${task.description || '📝 Detallar...'}</div>`;
+        li.innerHTML = `
+            <div class="task-header">
+                <div class="task-info" onclick="toggleAccordion(${task.id})">
+                    <strong>${isChild ? '↳ ' : ''}${task.title} ${recurIcon}</strong>
+                    <div class="task-meta">${dateText}</div>
+                </div>
+                <div class="actions">
+                    <button onclick="toggleStatus(${task.id},'${task.status}','${task.recurrence}','${task.title}','${task.category}')" class="check-btn"><i class="fas ${task.status==='completed'?'fa-check-circle':'fa-circle'}"></i></button>
+                    <button onclick="deleteTask(${task.id})" class="delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <div class="task-desc" id="desc-box-${task.id}" style="display:none; padding:10px; border-top:1px solid #333;">
+                <button class="subtask-btn" onclick="openSubtaskModal(${task.id})" style="width:100%; background:transparent; border:1px dashed #ffcc00; color:#ffcc00; padding:5px; cursor:pointer;">+ Alt Tapşırıq</button>
+            </div>`;
         listElement.appendChild(li);
     }
-    
-    function translateRecurrence(type) { const dict = { 'hourly': 'Hər saat', 'daily': 'Hər gün', 'weekly': 'Həftəlik', 'monthly': 'Aylıq' }; return dict[type] || type; }
 
-    // REAL ZAMANDA TƏKRAROLUNMA MƏNTİQİ
-    window.toggleStatus = async (id,s,r,t,c) => { 
-        const ns = s === 'completed' ? 'pending' : 'completed'; 
-        if(ns === 'completed' && r && r !== 'null'){ 
-            let nextDate = new Date(); 
-            if(r === 'hourly') nextDate.setHours(nextDate.getHours() + 1);
-            if(r === 'daily') nextDate.setDate(nextDate.getDate() + 1);
-            if(r === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
-            if(r === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1); 
+    function translateRecur(r) {
+        const d = { 'hourly': 'Hər saat', 'daily': 'Hər gün', 'weekly': 'Həftəlik' };
+        return d[r] || r;
+    }
 
+    window.toggleAccordion = (id) => {
+        const desc = document.getElementById(`desc-box-${id}`);
+        const sub = document.getElementById(`subtasks-${id}`);
+        if(desc) desc.style.display = desc.style.display === "none" ? "block" : "none";
+        if(sub) sub.style.display = sub.style.display === "none" ? "block" : "none";
+    };
+
+    window.toggleStatus = async (id, s, r, t, c) => {
+        const ns = s === 'completed' ? 'pending' : 'completed';
+        if (ns === 'completed' && r && r !== 'null') {
+            let next = new Date();
+            if (r === 'daily') next.setDate(next.getDate() + 1);
+            if (r === 'hourly') next.setHours(next.getHours() + 1);
             await fetch("/api/tasks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                body: JSON.stringify({ title: t, category: c, description: "", due_date: nextDate.toISOString(), recurrence: r, parent_id: null })
-            }); 
-        } 
-        await fetch(`/api/tasks/${id}/status`, {method:"PUT", headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`}, body:JSON.stringify({status:ns})}); 
-        loadTasks(); 
+                body: JSON.stringify({ title: t, category: c, due_date: next.toISOString(), recurrence: r, parent_id: null })
+            });
+        }
+        await fetch(`/api/tasks/${id}/status`, { method: "PUT", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ status: ns }) });
+        loadTasks();
     };
 
-    window.deleteTask = (id) => { fetch(`/api/tasks/${id}`, {method:"DELETE", headers:{"Authorization":`Bearer ${token}`}}).then(() => loadTasks()); };
-
-    // QEYDLƏRİ FİLTRLİ YÜKLƏMƏ (Sadə Mətn vs Hədəf)
-    async function loadNotes() { 
+    async function loadNotes() {
         const res = await fetch("/api/notes", { headers: { "Authorization": `Bearer ${token}` } });
         const data = await res.json();
         const container = document.getElementById("notes-list");
         container.innerHTML = "";
-
-        if (!data.notes || data.notes.length === 0) { container.innerHTML = "<p style='text-align:center; color:#555;'>Hələ heç nə yoxdur.</p>"; return; }
-
-        const selectedType = document.getElementById("note-type").value;
-        const filteredNotes = data.notes.filter(n => n.type === selectedType);
-
-        if (filteredNotes.length === 0) {
-            container.innerHTML = `<p style='text-align:center; color:#555;'>Bu bölmədə hələ məlumat yoxdur.</p>`;
-            return;
-        }
-
-        const section = document.createElement("div");
-        section.innerHTML = `<h3 class="note-section-title">${selectedType === 'text' ? '📝 Qeydlər' : '✅ Hədəflər'}</h3>`;
-        const grid = document.createElement("div");
-        grid.className = "notes-grid";
-        filteredNotes.forEach(n => grid.appendChild(createNoteCard(n)));
-        section.appendChild(grid);
-        container.appendChild(section);
+        const type = noteTypeSelect.value;
+        const filtered = (data.notes || []).filter(n => n.type === type);
+        filtered.forEach(n => {
+            const div = document.createElement("div");
+            div.className = "note-card";
+            div.innerHTML = `<h3>${n.title}</h3><textarea onblur="updateNote(${n.id},this.value)">${n.content || ''}</textarea>`;
+            container.appendChild(div);
+        });
     }
 
-    function createNoteCard(note){
-        const div=document.createElement("div");div.className="note-card";
-        let hh=`<div class="note-header"><div><h3>${note.title}</h3></div><button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-trash"></i></button></div>`;
-        let ch= note.type === 'text' ? `<textarea class="note-textarea" onblur="updateNoteText(${note.id},this.value)">${note.content||''}</textarea>` : `<div class="checklist-container">...checklist kodları...</div>`; 
-        // Checklist hissəsi mövcud kodundakı kimi qalır
-        div.innerHTML=hh+ch; return div;
-    }
+    // Modal funksiyaları
+    const modal = document.getElementById("subtask-modal");
+    let currentPid = null;
+    window.openSubtaskModal = (id) => { currentPid = id; modal.style.display = "flex"; };
+    document.getElementById("close-modal-btn").onclick = () => modal.style.display = "none";
+    document.getElementById("save-modal-btn").onclick = async () => {
+        const title = document.getElementById("modal-subtask-input").value;
+        await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ title, category: "general", parent_id: currentPid })
+        });
+        modal.style.display = "none";
+        loadTasks();
+    };
+
+    await loadCategories();
+    await loadTasks();
 });
